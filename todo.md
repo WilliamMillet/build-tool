@@ -1,0 +1,2 @@
+- String quote escaping
+- Cleaner error messages. Maybe show the actual line when throwing the error
