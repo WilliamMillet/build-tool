@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-constexpr static std::string_view DEFAULT_BUILD_FILE_NAME = "Buildfile";
+// TO DO - Probably organise this in a class
 
 constexpr static char BLOCK_START = '{';
 constexpr static char BLOCK_END = '}';
@@ -34,11 +34,11 @@ enum class LexemeType {
     MACRO_FN_START,
     MACRO_FN_END,
     STRING,
-    SCOPE_RESOLVER,
     DELIMETER,
+    SCOPE_RESOLVER,
     COMMENT,
+    UNIDENTIFIED,
     NEWLINE,
-    UNIDENTIFIED
 };
 
 struct LexEntry {
@@ -47,6 +47,11 @@ struct LexEntry {
 };
 
 // Characters that can only be part of a one sized token
+constexpr static std::array<char, 12> LONE_TOKS = {BLOCK_START, BLOCK_END,      LIST_START,
+                                                   LIST_END,    MACRO_FN_START, MACRO_FN_END,
+                                                   DELIMETER,   EQUALS_CHAR,    ADD_CHAR};
+
+// Characters that can only be part of a one sized token and map directly to a one sized type
 constexpr static std::array<LexEntry, 12> DIRECT_LONE_MAPPINGS = {
     {{BLOCK_START, LexemeType::BLOCK_START},
      {BLOCK_END, LexemeType::BLOCK_END},
@@ -54,22 +59,27 @@ constexpr static std::array<LexEntry, 12> DIRECT_LONE_MAPPINGS = {
      {LIST_END, LexemeType::LIST_END},
      {MACRO_FN_START, LexemeType::MACRO_FN_START},
      {MACRO_FN_END, LexemeType::MACRO_FN_END},
-     {SCOPE_RESOLVER, LexemeType::SCOPE_RESOLVER},
      {DELIMETER, LexemeType::DELIMETER},
      {EQUALS_CHAR, LexemeType::EQUALS},
-     {ADD_CHAR, LexemeType::ADD},
-     {NEWLINE, LexemeType::NEWLINE}}};
+     {NEWLINE, LexemeType::NEWLINE},
+     {ADD_CHAR, LexemeType::ADD}}};
 
 struct Lexeme {
     LexemeType type;
     std::string value;
+    size_t line_no;
 
-    Lexeme(LexemeType type_, std::string value_) : type(type_), value(value_) {};
+    Lexeme(size_t line_no_, LexemeType type_, std::string value_ = "")
+        : type(type_), value(value_), line_no(line_no_) {};
 
-    Lexeme() : type(LexemeType::UNIDENTIFIED) {};
+    Lexeme(size_t line_no_) : type(LexemeType::UNIDENTIFIED), line_no(line_no_) {};
 };
 
-std::vector<Lexeme> lex_file(const std::string_view input_file = DEFAULT_BUILD_FILE_NAME);
+/** Generate a vector of lexemes from a build file */
+std::vector<Lexeme> lex_file(const std::string input_file = "Buildfile");
+
+/** Parse a token that is known to be one character long */
+void parse_lone(char c, std::vector<Lexeme>& lexeme_list, Lexeme& curr_lex, size_t& line_no);
 
 /** Determine if a character can be a valid component of an identifier */
 bool valid_identifier_char(char c);
