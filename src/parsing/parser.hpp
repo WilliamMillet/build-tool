@@ -3,57 +3,19 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "lexer.hpp"
-
-using VarNamespace = std::vector<std::string>;
+#include "../lexer.hpp"
+#include "expr.hpp"
 
 struct VarLexemes {
-    std::string name;
-    VarNamespace var_namespace;
+    std::string identifier;
     std::vector<Lexeme> lexemes;
 };
 
-enum class BinaryOpType { ADD };
-
-struct Expr {
-    virtual ~Expr() = 0;
-};
-
-struct BinaryOpExpr : Expr {
-    BinaryOpType type;
-    std::unique_ptr<Expr> left;
-    std::unique_ptr<Expr> right;
-
-    BinaryOpExpr(BinaryOpType _type, std::unique_ptr<Expr> _left, std::unique_ptr<Expr> _right)
-        : type(_type), left(std::move(_left)), right(std::move(_right)) {};
-};
-
-struct StringExpr : Expr {
-    std::string val;
-
-    StringExpr(std::string s) : val(std::move(s)) {};
-};
-
-struct VarRefExpr : Expr {
-    std::string var_name;
-
-    VarRefExpr(std::string s) : var_name(std::move(s)) {};
-};
-
-struct FnExpr : Expr {
-    std::string func_name;
-    std::vector<std::unique_ptr<Expr>> args;
-
-    FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
-};
-
-struct VarExpr {
-    std::string name;
-    VarNamespace var_namespace;
-    std::unique_ptr<Expr> lexemes;
+struct ParsedVariable {
+    std::string identifier;
+    std::unique_ptr<Expr> expr;
 };
 
 class Parser {
@@ -64,7 +26,7 @@ class Parser {
      * Parse the current lexeme source and return all the variables found. Function is single use
      * and likely won't work if called more then once as the lexeme source and parse_pos can change
      */
-    std::vector<VarExpr> parse();
+    std::vector<ParsedVariable> parse();
 
    private:
     std::vector<Lexeme> lexemes;
@@ -104,7 +66,7 @@ class Parser {
     bool match_type(std::vector<LexemeType> type_pool) const;
 
     /** Parse an assignment from the position after the dest identifier has been parsed */
-    std::unique_ptr<VarLexemes> parse_assignment(std::string& assignee, VarNamespace& var_ns);
+    std::unique_ptr<VarLexemes> parse_assignment(std::string&& assignee_id);
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();
