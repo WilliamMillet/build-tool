@@ -1,17 +1,18 @@
 #ifndef VALUE_REGISTRY_H
 #define VALUE_REGISTRY_H
 
-// #include <functional>
-// #include <memory>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "lexer.hpp"
-#include "value.hpp"
 
-struct UnevaluatedVar {
+using VarNamespace = std::vector<std::string>;
+
+struct VarLexemes {
     std::string name;
+    VarNamespace var_namespace;
     std::vector<Lexeme> lexemes;
 };
 
@@ -49,12 +50,23 @@ struct FnExpr : Expr {
     FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
 };
 
+struct VarExpr {
+    std::string name;
+    VarNamespace var_namespace;
+    std::unique_ptr<Expr> lexemes;
+};
+
 class Parser {
    public:
-    Parser(std::vector<Lexeme> lexemes);
+    Parser(std::vector<Lexeme> _lexemes) : lexemes(_lexemes) {};
+
+    /**
+     * Parse the current lexeme source and return all the variables found. Function is single use
+     * and likely won't work if called more then once as the lexeme source and parse_pos can change
+     */
+    std::vector<VarExpr> parse();
 
    private:
-    std::unordered_map<std::string, Value> variables;
     std::vector<Lexeme> lexemes;
     size_t parse_pos = 0;
 
@@ -69,8 +81,6 @@ class Parser {
 
     /** Get the lexeme at the current position */
     Lexeme peek() const;
-
-    Lexeme peek_next() const;
 
     /** Advance the position in the lexemes and return what was 'consumed' */
     Lexeme consume();
@@ -93,15 +103,8 @@ class Parser {
     /** Return true iff the next tokens type is in a given list */
     bool match_type(std::vector<LexemeType> type_pool) const;
 
-    /** Parse what is potentially an assignment, knowing it starts with an identifier */
-    std::unique_ptr<UnevaluatedVar> parse_potential_assignment();
-
-    /**
-     * Consume a lexeme expression that is being assigned to a val and return it in unevaluated
-     * form
-     * @param identifier The identifier the lexeme expression is being assigned to
-     */
-    UnevaluatedVar consume_expr_as_unevaluated_var(std::string assigning_to);
+    /** Parse an assignment from the position after the dest identifier has been parsed */
+    std::unique_ptr<VarLexemes> parse_assignment(std::string& assignee, VarNamespace& var_ns);
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();

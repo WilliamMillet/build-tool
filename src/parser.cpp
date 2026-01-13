@@ -4,28 +4,44 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 #include "lexer.hpp"
 
-Parser::Parser(std::vector<Lexeme> lexemes) {
-    this->lexemes = lexemes;
-    std::vector<UnevaluatedVar> unevaluated_vec;
+std::vector<VarExpr> Parser::parse() {
+    std::vector<VarLexemes> var_lex_vec;
+    std::shared_ptr<VarNamespace> var_namespace = std::make_shared<VarNamespace>();
     while (!at_end()) {
         Lexeme lex = peek();
         if (lex.type == LexemeType::IDENTIFIER) {
-            std::unique_ptr<UnevaluatedVar> unevaluated = parse_potential_assignment();
-            if (unevaluated != nullptr) {
-                unevaluated_vec.push_back(std::move(*unevaluated));
+            std::string id = consume(LexemeType::IDENTIFIER).value;
+            if (match_type({LexemeType::BLOCK_START})) {
+                var_namespace->push_back(std::move(id));
+            } else {
+                std::unique_ptr<VarLexemes> unevaluated = parse_assignment(id, *var_namespace);
+                if (unevaluated != nullptr) {
+                    var_lex_vec.push_back(std::move(*unevaluated));
+                }
             }
+        } else if (match_type({LexemeType::BLOCK_END})) {
+            if (var_namespace->empty()) {
+                throw_pinpointed_err("Closing brace '" + peek().value + "' has no opener");
+            }
+            var_namespace->pop_back();
         } else {
             consume();
         }
     }
-};
+
+    std::vector<VarExpr> var_exprs;
+    for (VarLexemes v : var_lex_vec) {
+        change_lexeme_source(std::move(v.lexemes));
+        var_exprs.push_back({v.name, v.var_namespace, parse_expr()});
+    }
+    return var_exprs;
+}
 
 Lexeme Parser::peek() const { return lexemes.at(parse_pos); }
-
-Lexeme Parser::peek_next() const { return lexemes.at(parse_pos + 1); }
 
 bool Parser::at_end() const { return parse_pos >= lexemes.size(); }
 
@@ -63,29 +79,19 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
     return !at_end() && std::ranges::contains(type_pool, peek().type);
 }
 
-std::unique_ptr<UnevaluatedVar> Parser::parse_potential_assignment() {
-    std::string identifier = peek().value;
-    consume();
-
+std::unique_ptr<VarLexemes> Parser::parse_assignment(std::string& assignee, VarNamespace& var_ns) {
     expect_type(VALID_IDENTIFIER_SUCCESSORS);
 
     if (peek().type == LexemeType::EQUALS) {
         consume();
-        return std::make_unique<UnevaluatedVar>(consume_expr_as_unevaluated_var(identifier));
+        expect_type(VARIABLE_STARTS);
+        while (!at_end() && peek().type != LexemeType::NEWLINE) {
+            lexemes.push_back(consume());
+        }
+        return std::make_unique<VarLexemes>(std::move(assignee), var_ns, std::move(lexemes));
     }
 
     return nullptr;
-}
-
-UnevaluatedVar Parser::consume_expr_as_unevaluated_var(std::string assigning_to) {
-    expect_type(VARIABLE_STARTS);
-
-    std::vector<Lexeme> lexemes;
-    while (!at_end() && peek().type != LexemeType::NEWLINE) {
-        lexemes.push_back(consume());
-    }
-
-    return UnevaluatedVar{assigning_to, std::move(lexemes)};
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() {
