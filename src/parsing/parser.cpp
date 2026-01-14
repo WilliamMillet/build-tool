@@ -118,11 +118,19 @@ std::unique_ptr<Expr> Parser::parse_term() {
             return std::make_unique<StringExpr>(consume(LexemeType::STRING).value);
         }
         case LexemeType::IDENTIFIER: {
-            std::string identifier_name = consume(LexemeType::IDENTIFIER).value;
-            if (match_type({LexemeType::MACRO_FN_START})) {
-                return parse_fn_args(std::move(identifier_name));
-            } else {
-                return std::make_unique<VarRefExpr>(identifier_name);
+            std::string identifier = consume(LexemeType::IDENTIFIER).value;
+            switch (peek().type) {
+                case LexemeType::MACRO_FN_START: {
+                    return parse_fn_args(std::move(identifier));
+                }
+                case LexemeType::SCOPE_RESOLVER: {
+                    consume(LexemeType::SCOPE_RESOLVER);
+                    std::string enum_name = consume(LexemeType::IDENTIFIER).value;
+                    return std::make_unique<EnumExpr>(identifier, enum_name);
+                }
+                default: {
+                    return std::make_unique<VarRefExpr>(identifier);
+                }
             }
         }
         default: {
