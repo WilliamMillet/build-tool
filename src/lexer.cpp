@@ -2,8 +2,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <fstream>
-#include <ranges>
 
 std::vector<Lexeme> lex_file(const std::string input_file) {
     std::filesystem::path bf_path(input_file);

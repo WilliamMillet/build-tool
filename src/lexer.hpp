@@ -2,7 +2,6 @@
 #define LEXER_H
 
 #include <array>
-#include <filesystem>
 #include <string>
 #include <vector>
 
