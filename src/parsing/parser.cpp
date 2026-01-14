@@ -6,28 +6,22 @@
 #include <string>
 
 #include "../lexer.hpp"
-#include "namespace_builder.hpp"
 
 std::vector<ParsedVariable> Parser::parse() {
     std::vector<VarLexemes> var_lex_vec;
-    NamespaceBuilder ns;
     while (!at_end()) {
         Lexeme lex = peek();
         if (lex.type == LexemeType::IDENTIFIER) {
             std::string id = consume(LexemeType::IDENTIFIER).value;
-            if (match_type({LexemeType::BLOCK_START})) {
-                ns.append_identifier(std::move(id));
+            expect_type(VALID_IDENTIFIER_SUCCESSORS);
+            if (match_type({LexemeType::EQUALS})) {
+                std::unique_ptr<VarLexemes> unevaluated = parse_assignment(std::move(id));
+                var_lex_vec.push_back(std::move(*unevaluated));
             } else {
-                std::unique_ptr<VarLexemes> unevaluated = parse_assignment(ns.curr_namespace());
-                if (unevaluated != nullptr) {
-                    var_lex_vec.push_back(std::move(*unevaluated));
-                }
+                std::unique_ptr<VarLexemes> unevaluated = parse_config_assignment(std::move(id));
+                var_lex_vec.push_back(std::move(*unevaluated));
             }
-        } else if (match_type({LexemeType::BLOCK_END})) {
-            if (ns.empty()) {
-                throw_pinpointed_err("Closing brace '" + peek().value + "' has no opener");
-            }
-            ns.pop_identifier();
+
         } else {
             consume();
         }
@@ -80,18 +74,42 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
 }
 
 std::unique_ptr<VarLexemes> Parser::parse_assignment(std::string&& assignee_id) {
-    expect_type(VALID_IDENTIFIER_SUCCESSORS);
+    consume(LexemeType::EQUALS);
+    expect_type(VARIABLE_STARTS);
+    std::vector<Lexeme> assigned_lexemes;
+    while (!at_end() && peek().type != LexemeType::NEWLINE) {
+        assigned_lexemes.push_back(consume());
+    }
+    return std::make_unique<VarLexemes>(std::move(assignee_id), std::move(assigned_lexemes));
+}
 
-    if (peek().type == LexemeType::EQUALS) {
-        consume();
-        expect_type(VARIABLE_STARTS);
-        while (!at_end() && peek().type != LexemeType::NEWLINE) {
-            lexemes.push_back(consume());
+std::unique_ptr<VarLexemes> Parser::parse_config_assignment(std::string&& assignee_id) {
+    const Lexeme block_start = consume(LexemeType::BLOCK_START);
+
+    std::vector<Lexeme> assigned_lexemes = {block_start};
+    std::vector<size_t> open_paren_line_nos = {block_start.line_no};
+
+    while (!open_paren_line_nos.empty() && !at_end()) {
+        if (match_type({LexemeType::BLOCK_START})) {
+            open_paren_line_nos.push_back(consume(LexemeType::BLOCK_START).line_no);
+        } else if (match_type({LexemeType::BLOCK_END})) {
+            if (open_paren_line_nos.empty()) {
+                throw_pinpointed_err("Closing parenthesis '" + peek().value +
+                                     " ' does not have a corresponding opening parenthesis");
+            } else {
+                open_paren_line_nos.pop_back();
+            }
         }
-        return std::make_unique<VarLexemes>(std::move(assignee_id), std::move(lexemes));
+
+        assigned_lexemes.push_back(consume());
     }
 
-    return nullptr;
+    if (at_end() && !open_paren_line_nos.empty()) {
+        const std::string bad_line = std::to_string(open_paren_line_nos.back());
+        throw std::invalid_argument("Unclosed parenthesis on line " + bad_line);
+    }
+
+    return std::make_unique<VarLexemes>(std::move(assignee_id), std::move(assigned_lexemes));
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() {
@@ -116,6 +134,9 @@ std::unique_ptr<Expr> Parser::parse_term() {
     switch (peek().type) {
         case LexemeType::STRING: {
             return std::make_unique<StringExpr>(consume(LexemeType::STRING).value);
+        }
+        case LexemeType::BLOCK_START: {
+            return parse_config_obj();
         }
         case LexemeType::IDENTIFIER: {
             std::string identifier = consume(LexemeType::IDENTIFIER).value;
@@ -142,6 +163,7 @@ std::unique_ptr<Expr> Parser::parse_term() {
 std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string&& fn_name) {
     std::unique_ptr<FnExpr> fn_expr = std::make_unique<FnExpr>(fn_name);
     consume(LexemeType::MACRO_FN_START);
+    fn_expr->args.push_back(parse_expr());
 
     while (match_type({LexemeType::DELIMETER})) {
         fn_expr->args.push_back(parse_expr());
@@ -150,4 +172,21 @@ std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string&& fn_name) {
     consume(LexemeType::MACRO_FN_END);
 
     return fn_expr;
+}
+
+std::unique_ptr<ConfigObjExpr> Parser::parse_config_obj() {
+    std::unique_ptr<ConfigObjExpr> cfg_expr = std::make_unique<ConfigObjExpr>();
+    while (!at_end() && !match_type({LexemeType::BLOCK_END})) {
+        std::string id = consume(LexemeType::IDENTIFIER).value;
+        consume(LexemeType::EQUALS);
+        cfg_expr->fields_map[id] = parse_expr();
+        consume(LexemeType::DELIMETER);
+    }
+    if (at_end()) {
+        throw_pinpointed_err("Failed to parse ConfigObj");
+    }
+
+    consume(LexemeType::BLOCK_END);
+
+    return cfg_expr;
 }

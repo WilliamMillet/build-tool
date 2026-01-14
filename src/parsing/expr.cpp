@@ -1,6 +1,7 @@
 #include "expr.hpp"
 
 #include <memory>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,14 @@ std::vector<Expr*> FnExpr::get_children() const {
     return res;
 }
 
+std::vector<Expr*> ConfigObjExpr::get_children() const {
+    std::vector<Expr*> children;
+    for (const std::unique_ptr<Expr>& child : std::views::values(fields_map)) {
+        children.push_back(child.get());
+    }
+    return children;
+}
+
 Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
     Value val = left->evaluate(var_map, fn_reg);
     switch (type) {
@@ -38,7 +47,15 @@ Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
     }
     return val;
 }
-Value StringExpr::evaluate(VarMap&, FuncRegistry&) const { return val; }
+
+Value StringExpr::evaluate(VarMap&, FuncRegistry&) const {
+    std::string val_dup = val;
+    return Value{std::move(val_dup)};
+}
+
+Value EnumExpr::evaluate(VarMap&, FuncRegistry&) const {
+    return Value(ScopedEnumValue(scope, name));
+};
 
 Value VarRefExpr::evaluate(VarMap& var_map, FuncRegistry&) const {
     auto var_val = var_map.find(identifier);
@@ -57,6 +74,12 @@ Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
     return fn_reg.call(func_name, std::move(arg_vals));
 }
 
-Value EnumExpr::evaluate(VarMap&, FuncRegistry&) const {
-    return Value(ScopedEnumValue(scope, name));
+Value ConfigObjExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
+    ConfigObj cfg_obj;
+
+    for (const auto& [id, expr] : fields_map) {
+        cfg_obj.fields[id] = expr->evaluate(var_map, fn_reg);
+    }
+
+    return Value{std::move(cfg_obj)};
 }

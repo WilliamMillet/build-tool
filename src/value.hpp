@@ -24,15 +24,20 @@ struct ScopedEnumValue {
     std::string name;
 };
 
-enum class ValueType { INT, STRING, LIST, ENUM, NONE };
+struct ConfigObj {
+    std::unordered_map<std::string, Value> fields;
+};
+
+enum class ValueType { INT, STRING, LIST, ENUM, CFG_OBJ, NONE };
 
 class Value {
    public:
     Value();
     Value(int x);
-    Value(std::string x);
-    Value(ValueList x);
-    Value(ScopedEnumValue x);
+    Value(std::string&& x);
+    Value(ValueList&& x);
+    Value(ScopedEnumValue&& x);
+    Value(ConfigObj&& x);
 
     template <typename T>
     const T& get() const {
@@ -44,7 +49,7 @@ class Value {
     Value& operator+=(const Value& other);
 
    private:
-    std::variant<int, std::string, ValueList, ScopedEnumValue> raw_val;
+    std::variant<int, std::string, ValueList, ScopedEnumValue, ConfigObj> raw_val;
     ValueType type;
 
     inline static const std::unordered_map<ValueType, std::string> type_string_map = {

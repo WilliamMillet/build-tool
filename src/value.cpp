@@ -18,11 +18,13 @@ Value::Value() { type = ValueType::NONE; }
 
 Value::Value(int x) : raw_val(x) { type = ValueType::INT; }
 
-Value::Value(std::string x) : raw_val(std::move(x)) { type = ValueType::STRING; }
+Value::Value(std::string&& x) : raw_val(std::move(x)) { type = ValueType::STRING; }
 
-Value::Value(ValueList x) : raw_val(std::move(x)) { type = ValueType::LIST; }
+Value::Value(ValueList&& x) : raw_val(std::move(x)) { type = ValueType::LIST; }
 
-Value::Value(ScopedEnumValue x) : raw_val(std::move(x)) { type = ValueType::ENUM; }
+Value::Value(ScopedEnumValue&& x) : raw_val(std::move(x)) { type = ValueType::ENUM; }
+
+Value::Value(ConfigObj&& x) : raw_val(std::move(x)) { type = ValueType::CFG_OBJ; }
 
 ValueType Value::get_type() const { return type; }
 
@@ -30,7 +32,7 @@ Value& Value::operator+=(const Value& other) {
     if (other.type != type) {
         const std::string type_a = type_string_map.at(type);
         const std::string type_b = type_string_map.at(type);
-        throw std::invalid_argument("Cannot add two values of opposing types ('" + type_a +
+        throw std::invalid_argument("Cannot add two values of distinct types ('" + type_a +
                                     "' + '" + type_b + "')");
     }
 

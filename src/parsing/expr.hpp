@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "../funcs/func_registry.hpp"
@@ -75,6 +76,14 @@ struct FnExpr : Expr {
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
 
     FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
+};
+
+struct ConfigObjExpr : Expr {
+    std::unordered_map<std::string, std::unique_ptr<Expr>> fields_map;
+
+    std::vector<Expr*> get_children() const override;
+
+    Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
 };
 
 #endif

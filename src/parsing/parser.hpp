@@ -68,6 +68,9 @@ class Parser {
     /** Parse an assignment from the position after the dest identifier has been parsed */
     std::unique_ptr<VarLexemes> parse_assignment(std::string&& assignee_id);
 
+    /** Parse a config object assignment from the opening parenthesis */
+    std::unique_ptr<VarLexemes> parse_config_assignment(std::string&& assignee_id);
+
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();
 
@@ -76,6 +79,9 @@ class Parser {
 
     /** Parse the arguments of a function from the opening to closing parenthesis */
     std::unique_ptr<FnExpr> parse_fn_args(std::string&& fn_name);
+
+    /** Parse a ConfigObj from the opening brace to and including the closing brace */
+    std::unique_ptr<ConfigObjExpr> parse_config_obj();
 };
 
 #endif
