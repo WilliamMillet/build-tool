@@ -22,7 +22,6 @@ std::vector<Lexeme> lex_file(const std::string input_file) {
     size_t line_no = 0;
     char c;
     while (bf_file.get(c)) {
-        
         if (std::isspace(c)) {
             continue;
         } else if (curr_lex.type == LexemeType::COMMENT) {
@@ -34,7 +33,7 @@ std::vector<Lexeme> lex_file(const std::string input_file) {
             bf_file.get();
             if (c != SCOPE_RESOLVER) {
                 throw new std::invalid_argument("Error on line " + std::to_string(line_no) +
-                ": Unexpected ':' character");
+                                                ": Unexpected ':' character");
             }
             lexeme_list.push_back(SCOPE_RESOLVER);
         } else if (curr_lex.type == LexemeType::STRING && c != STRING_QUOTE) {
@@ -46,9 +45,11 @@ std::vector<Lexeme> lex_file(const std::string input_file) {
         } else if (std::ranges::contains(LONE_TOKS, c)) {
             parse_lone(c, lexeme_list, curr_lex, line_no);
         }
-        
+
         if (c == NEWLINE) line_no++;
     }
+
+    lexeme_list.push_back(Lexeme{line_no, LexemeType::END_OF_FILE});
 
     return lexeme_list;
 }

@@ -20,7 +20,7 @@ class FuncRegistry {
     Value call(const std::string& name, const std::vector<Value>& args);
 
    private:
-    const FnMap func_map;
+    FnMap func_map;
 
     inline static const FnMap DEFAULT_FN_MAP = {{"file_names", BuiltIn::file_names}};
 };

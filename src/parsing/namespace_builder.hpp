@@ -1,3 +1,6 @@
+#ifndef NAMESPACE_BUILDER_H
+#define NAMESPACE_BUILDER_H
+
 #include <string>
 #include <vector>
 
@@ -19,3 +22,5 @@ class NamespaceBuilder {
     std::string namespace_str;
     std::vector<int> namespace_part_start_idxs;
 };
+
+#endif

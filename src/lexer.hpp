@@ -37,8 +37,10 @@ enum class LexemeType {
     DELIMETER,
     SCOPE_RESOLVER,
     COMMENT,
-    UNIDENTIFIED,
     NEWLINE,
+    // The lexeme has not yet been categorised
+    UNIDENTIFIED,
+    END_OF_FILE,
 };
 
 struct LexEntry {
