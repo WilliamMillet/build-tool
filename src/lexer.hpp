@@ -1,8 +1,6 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <array>
-#include <fstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,10 +22,6 @@ enum class LexemeType {
     SCOPE_RESOLVER,
     COMMENT,
     NEWLINE,
-    // Consider removing this unidentified I dont know if its used (or the constructors using it are
-    // used)
-    // The lexeme has not yet been categorised
-    UNIDENTIFIED,
     END_OF_FILE,
 };
 
@@ -38,8 +32,6 @@ struct Lexeme {
 
     Lexeme(size_t line_no_, LexemeType type_, std::string value_ = "")
         : type(type_), value(value_), line_no(line_no_) {};
-
-    Lexeme(size_t line_no_) : type(LexemeType::UNIDENTIFIED), line_no(line_no_) {};
 };
 
 class Lexer {

@@ -1,6 +1,5 @@
 #include "lexer.hpp"
 
-#include <algorithm>
 #include <cctype>
 #include <stdexcept>
 
