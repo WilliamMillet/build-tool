@@ -140,5 +140,4 @@ void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {
         id += consume();
     }
     lexemes.push_back(Lexeme{line_no, LexemeType::IDENTIFIER, id});
-    continue;
 }

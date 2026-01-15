@@ -41,11 +41,6 @@ class Parser {
     std::vector<Lexeme> lexemes;
     size_t parse_pos = 0;
 
-    inline const static std::unordered_map<std::string, VarCategory> VAR_CAT_NAME_MAP = {
-        {"MultiRule", VarCategory::MULTI_RULE},
-        {"Rule", VarCategory::RULE},
-        {"Clean", VarCategory::CLEAN}};
-
     inline const static std::vector<LexemeType> VALID_IDENTIFIER_SUCCESSORS = {
         LexemeType::EQUALS, LexemeType::BLOCK_START};
 
@@ -80,10 +75,10 @@ class Parser {
     bool match_type(std::vector<LexemeType> type_pool) const;
 
     /** Parse an assignment from the position after the dest identifier has been parsed */
-    std::vector<Lexeme> parse_assignment();
+    std::vector<Lexeme> consume_var_lexemes();
 
     /** Parse a config object assignment from the opening parenthesis */
-    VarLexemes parse_cfg_assignment(std::string id);
+    std::vector<Lexeme> consume_cfg_obj_lexemes();
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();

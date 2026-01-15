@@ -2,7 +2,8 @@
 #include "parsing/parser.hpp"
 
 int main(void) {
-    std::vector<Lexeme> lexed = lex_file();
+    Lexer lexer;
+    std::vector<Lexeme> lexed = lexer.lex();
     Parser parser(lexed);
     std::vector<ParsedVariable> parsed = parser.parse();
     return 0;

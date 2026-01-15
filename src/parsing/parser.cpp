@@ -13,12 +13,13 @@ std::vector<ParsedVariable> Parser::parse() {
         Lexeme lex = peek();
         if (match_type({LexemeType::IDENTIFIER})) {
             std::string id = consume(LexemeType::IDENTIFIER).value;
-            expect_type(VALID_IDENTIFIER_SUCCESSORS);
-            if (match_type({LexemeType::EQUALS})) {
-                var_lexes.push_back({std::move(id), parse_assignment(), VarCategory::REGULAR});
-            } else {
-                var_lexes.push_back(parse_cfg_assignment(id));
-            }
+            expect_type({LexemeType::EQUALS});
+            var_lexes.push_back({std::move(id), consume_var_lexemes(), VarCategory::REGULAR});
+        } else if (match_type({LexemeType::RULE_IDENTIFIER})) {
+            std::string rule_str = consume(LexemeType::RULE_IDENTIFIER).value;
+            VarCategory cat = categorise_cfg_obj(rule_str);
+            std::string id = consume(LexemeType::IDENTIFIER).value;
+            var_lexes.push_back({std::move(id), consume_cfg_obj_lexemes(), cat});
         } else {
             consume();
         }
@@ -70,7 +71,7 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
     return !at_end() && std::ranges::contains(type_pool, peek().type);
 }
 
-std::vector<Lexeme> Parser::parse_assignment() {
+std::vector<Lexeme> Parser::consume_var_lexemes() {
     consume(LexemeType::EQUALS);
     expect_type(VARIABLE_STARTS);
     std::vector<Lexeme> assigned_lexemes;
@@ -80,7 +81,7 @@ std::vector<Lexeme> Parser::parse_assignment() {
     return assigned_lexemes;
 }
 
-VarLexemes Parser::parse_cfg_assignment(std::string id) {
+std::vector<Lexeme> Parser::consume_cfg_obj_lexemes() {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};
@@ -106,7 +107,7 @@ VarLexemes Parser::parse_cfg_assignment(std::string id) {
         throw std::invalid_argument("Unclosed parenthesis on line " + bad_line);
     }
 
-    return VarLexemes(std::to_string(cfg_idx), std::move(assigned_lexemes), categorise_cfg_obj(id));
+    return assigned_lexemes;
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() {

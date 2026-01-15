@@ -1,8 +1,14 @@
+#ifndef RULES_H
+#define RULES_H
+
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "value.hpp"
+
+enum class RuleType { SINGLE, MULTI, CLEAN };
 
 enum class Step { COMPILE, LINK };
 
@@ -21,6 +27,19 @@ struct Rule {
             dependencies.push_back(v->get<std::string>());
         }
     }
+
+    // /** Convert a rule type string to a RuleType enum */
+    // static RuleType str_to_type(std::string& type) {
+    //     if (type == "Rule") {
+    //         return RuleType::SINGLE;
+    //     } else if (type == "MultiRule") {
+    //         return RuleType::MULTI;
+    //     } else if (type == "Clean") {
+    //         return RuleType::CLEAN;
+    //     } else {
+    //         throw std::invalid_argument("Unknown rule type '<" + type + ">'");
+    //     }
+    // }
 };
 
 struct SingleRule : public Rule {
@@ -31,6 +50,8 @@ struct MultiRule : public Rule {
     std::vector<std::string> ouput;
 };
 
-struct Clean {
+struct CleanRule {
     std::vector<std::string> targets;
 };
+
+#endif
