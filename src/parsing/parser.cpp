@@ -7,10 +7,6 @@
 
 #include "../lexer.hpp"
 
-// TO DO
-// Go back to the system where I did f(lexemes) -> expression at the end
-// Return a ParsedFile struct with RuleRegistry and Expr vector
-
 std::vector<ParsedVariable> Parser::parse() {
     std::vector<VarLexemes> var_lexes;
     while (!at_end()) {
@@ -161,7 +157,7 @@ std::unique_ptr<Expr> Parser::parse_term() {
     }
 }
 
-std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string&& fn_name) {
+std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) {
     std::unique_ptr<FnExpr> fn_expr = std::make_unique<FnExpr>(fn_name);
     consume(LexemeType::MACRO_FN_START);
     fn_expr->args.push_back(parse_expr());

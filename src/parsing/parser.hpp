@@ -95,7 +95,7 @@ class Parser {
     std::unique_ptr<Expr> parse_term();
 
     /** Parse the arguments of a function from the opening to closing parenthesis */
-    std::unique_ptr<FnExpr> parse_fn_args(std::string&& fn_name);
+    std::unique_ptr<FnExpr> parse_fn_args(std::string fn_name);
 
     /** Parse a ConfigObj from the opening brace to and including the closing brace */
     std::unique_ptr<ConfigObjExpr> parse_config_obj();
