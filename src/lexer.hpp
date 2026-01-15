@@ -2,27 +2,14 @@
 #define LEXER_H
 
 #include <array>
+#include <fstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
-
-// TO DO - Probably organise this in a class
-
-constexpr static char BLOCK_START = '{';
-constexpr static char BLOCK_END = '}';
-constexpr static char LIST_START = '[';
-constexpr static char LIST_END = ']';
-constexpr static char MACRO_FN_START = '(';
-constexpr static char MACRO_FN_END = ')';
-constexpr static char STRING_QUOTE = '"';
-constexpr static char SCOPE_RESOLVER = ':';
-constexpr static char DELIMETER = ',';
-constexpr static char EQUALS_CHAR = '=';
-constexpr static char ADD_CHAR = '+';
-constexpr static char COMMENT = '#';
-constexpr static char NEWLINE = '\n';
 
 enum class LexemeType {
     IDENTIFIER,
+    RULE_IDENTIFIER,
     ADD,
     EQUALS,
     LINE_START,
@@ -37,33 +24,12 @@ enum class LexemeType {
     SCOPE_RESOLVER,
     COMMENT,
     NEWLINE,
+    // Consider removing this unidentified I dont know if its used (or the constructors using it are
+    // used)
     // The lexeme has not yet been categorised
     UNIDENTIFIED,
     END_OF_FILE,
 };
-
-struct LexEntry {
-    char key;
-    LexemeType type;
-};
-
-// Characters that can only be part of a one sized token
-constexpr static std::array<char, 12> LONE_TOKS = {BLOCK_START, BLOCK_END,      LIST_START,
-                                                   LIST_END,    MACRO_FN_START, MACRO_FN_END,
-                                                   DELIMETER,   EQUALS_CHAR,    ADD_CHAR};
-
-// Characters that can only be part of a one sized token and map directly to a one sized type
-constexpr static std::array<LexEntry, 12> DIRECT_LONE_MAPPINGS = {
-    {{BLOCK_START, LexemeType::BLOCK_START},
-     {BLOCK_END, LexemeType::BLOCK_END},
-     {LIST_START, LexemeType::LIST_START},
-     {LIST_END, LexemeType::LIST_END},
-     {MACRO_FN_START, LexemeType::MACRO_FN_START},
-     {MACRO_FN_END, LexemeType::MACRO_FN_END},
-     {DELIMETER, LexemeType::DELIMETER},
-     {EQUALS_CHAR, LexemeType::EQUALS},
-     {NEWLINE, LexemeType::NEWLINE},
-     {ADD_CHAR, LexemeType::ADD}}};
 
 struct Lexeme {
     LexemeType type;
@@ -76,13 +42,72 @@ struct Lexeme {
     Lexeme(size_t line_no_) : type(LexemeType::UNIDENTIFIED), line_no(line_no_) {};
 };
 
-/** Generate a vector of lexemes from a build file */
-std::vector<Lexeme> lex_file(const std::string input_file = "Buildfile");
+class Lexer {
+   public:
+    Lexer(const std::string input = DEFAULT_SRC_FILE_NAME);
 
-/** Parse a token that is known to be one character long */
-void parse_lone(char c, std::vector<Lexeme>& lexeme_list, Lexeme& curr_lex, size_t& line_no);
+    /** Convert a file to lexemes */
+    std::vector<Lexeme> lex();
 
-/** Determine if a character can be a valid component of an identifier */
-bool valid_identifier_char(char c);
+   private:
+    constexpr static char BLOCK_START = '{';
+    constexpr static char BLOCK_END = '}';
+    constexpr static char LIST_START = '[';
+    constexpr static char LIST_END = ']';
+    constexpr static char MACRO_FN_START = '(';
+    constexpr static char MACRO_FN_END = ')';
+    constexpr static char RULE_NAME_START = '<';
+    constexpr static char RULE_NAME_END = '>';
+    constexpr static char STRING_QUOTE = '"';
+    constexpr static char SCOPE_RESOLVER = ':';
+    constexpr static char DELIMETER = ',';
+    constexpr static char EQUALS_CHAR = '=';
+    constexpr static char ADD_CHAR = '+';
+    constexpr static char COMMENT = '#';
+    constexpr static char NEWLINE = '\n';
+
+    // Characters that can only be part of a one sized token and map directly to a one sized lexeme
+    inline const static std::unordered_map<char, LexemeType> DIRECT_MAPPINGS = {
+        {{BLOCK_START, LexemeType::BLOCK_START},
+         {BLOCK_END, LexemeType::BLOCK_END},
+         {LIST_START, LexemeType::LIST_START},
+         {LIST_END, LexemeType::LIST_END},
+         {MACRO_FN_START, LexemeType::MACRO_FN_START},
+         {MACRO_FN_END, LexemeType::MACRO_FN_END},
+         {DELIMETER, LexemeType::DELIMETER},
+         {EQUALS_CHAR, LexemeType::EQUALS},
+         {ADD_CHAR, LexemeType::ADD}}};
+
+    constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile";
+    std::string src;
+    size_t line_no = 0;
+    size_t char_no = 0;
+
+    /** Returns the next character in the src */
+    char peek() const;
+
+    /** Return the next character in the src and advance the position */
+    char consume();
+
+    /** Consume if the char to consume is exp, otherwise throw an exception */
+    char consume(char exp);
+
+    /** Advance the character until a newline is reached. The newline is not consumed */
+    void consume_line();
+
+    /** True iff there are no more characters to lex */
+    bool at_end() const;
+
+    /** Determine if a character can be a valid component of an identifier */
+    static bool valid_identifier_char(char c);
+
+    void throw_pinpointed_err [[noreturn]] (std::string msg) const;
+
+    void lex_string(std::vector<Lexeme>& lexemes);
+
+    void lex_rule(std::vector<Lexeme>& lexemes);
+
+    void lex_identifier(std::vector<Lexeme>& lexemes);
+};
 
 #endif

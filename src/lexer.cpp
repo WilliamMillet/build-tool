@@ -2,72 +2,143 @@
 
 #include <algorithm>
 #include <cctype>
-#include <filesystem>
-#include <fstream>
+#include <stdexcept>
 
-std::vector<Lexeme> lex_file(const std::string input_file) {
-    std::filesystem::path bf_path(input_file);
-    if (!std::filesystem::exists(bf_path)) {
-        throw std::invalid_argument("File '" + input_file + "' not found");
-    }
-    std::ifstream bf_file(bf_path);
-    if (!bf_file.is_open()) {
-        throw std::system_error(errno, std::generic_category(),
-                                "Failed to open '" + input_file + "'.");
-    }
+#include "file_utils.hpp"
 
-    std::vector<Lexeme> lexeme_list;
-    Lexeme curr_lex{0};
+Lexer::Lexer(const std::string input) { src = FileUtils::read(input); }
 
-    size_t line_no = 0;
-    char c;
-    while (bf_file.get(c)) {
-        if (std::isspace(c)) {
+std::vector<Lexeme> Lexer::lex() {
+    line_no = 0;
+    char_no = 0;
+
+    std::vector<Lexeme> lexemes;
+    while (!at_end()) {
+        auto direct_itm = DIRECT_MAPPINGS.find(peek());
+        if (direct_itm != DIRECT_MAPPINGS.end()) {
+            std::string lex_val{consume()};
+            lexemes.push_back({line_no, direct_itm->second, lex_val});
             continue;
-        } else if (curr_lex.type == LexemeType::COMMENT) {
-            while (c && bf_file.peek() != NEWLINE) {
-                bf_file.get(c);
-            }
-        } else if (c == SCOPE_RESOLVER) {
-            // Scope resolver has contain two column characters
-            bf_file.get();
-            if (c != SCOPE_RESOLVER) {
-                throw new std::invalid_argument("Error on line " + std::to_string(line_no) +
-                                                ": Unexpected ':' character");
-            }
-            lexeme_list.push_back(SCOPE_RESOLVER);
-        } else if (curr_lex.type == LexemeType::STRING && c != STRING_QUOTE) {
-            // Any non STRING_QUOTE value can go inside a string
-            curr_lex.value += c;
-        } else if (valid_identifier_char(c)) {
-            curr_lex.value += c;
-            curr_lex.type = LexemeType::IDENTIFIER;
-        } else if (std::ranges::contains(LONE_TOKS, c)) {
-            parse_lone(c, lexeme_list, curr_lex, line_no);
         }
 
-        if (c == NEWLINE) line_no++;
+        if (std::isspace(peek())) {
+            consume();
+            continue;
+        }
+
+        if (valid_identifier_char(peek())) {
+            lex_identifier(lexemes);
+            continue;
+        }
+
+        switch (peek()) {
+            case NEWLINE: {
+                lexemes.push_back(Lexeme{line_no, LexemeType::NEWLINE});
+                break;
+            }
+            case COMMENT: {
+                consume_line();
+                break;
+            }
+            case SCOPE_RESOLVER: {
+                consume(SCOPE_RESOLVER);
+                consume(SCOPE_RESOLVER);
+                lexemes.push_back(Lexeme{line_no, LexemeType::SCOPE_RESOLVER});
+                break;
+            }
+            case STRING_QUOTE: {
+                lex_string(lexemes);
+                break;
+            }
+            case RULE_NAME_START: {
+                lex_rule(lexemes);
+                break;
+            }
+            default: {
+                std::string unexpected = {peek()};
+                throw_pinpointed_err("Unexpected char '" + unexpected + "'");
+                break;
+            }
+        }
     }
 
-    lexeme_list.push_back(Lexeme{line_no, LexemeType::END_OF_FILE});
+    lexemes.push_back(Lexeme{line_no, LexemeType::END_OF_FILE});
 
-    return lexeme_list;
+    return lexemes;
 }
 
-void parse_lone(char c, std::vector<Lexeme>& lexeme_list, Lexeme& curr_lex, size_t& line_no) {
-    if (c == STRING_QUOTE) {
-        if (curr_lex.type == LexemeType::STRING) {
-            lexeme_list.push_back(curr_lex);
-            curr_lex = Lexeme{line_no};
-        } else {
-            lexeme_list.push_back(curr_lex);
-            curr_lex = Lexeme{line_no, LexemeType::STRING};
-        }
+bool Lexer::valid_identifier_char(char c) { return std::isalnum(c) || c == '_'; };
+
+char Lexer::peek() const { return src.at(char_no); }
+
+char Lexer::consume() { return src.at(char_no++); }
+
+char Lexer::consume(char exp) {
+    std::string exp_str{exp};
+    std::string actl_str;
+    if (at_end()) {
+        actl_str += "EOF";
     } else {
-        // All non string lone tokens can be added as is
-        lexeme_list.push_back(curr_lex);
-        lexeme_list.emplace_back(line_no, LexemeType::BLOCK_START, std::string{BLOCK_START});
+        actl_str += peek();
+    }
+    throw_pinpointed_err("Expected character '" + exp_str + "' but got '" + actl_str + "'");
+}
+
+bool Lexer::at_end() const { return char_no == src.size(); }
+
+void Lexer::consume_line() {
+    while (peek() != NEWLINE) {
+        consume();
     }
 }
 
-bool valid_identifier_char(char c) { return std::isalnum(c) || c == '_'; };
+void Lexer::throw_pinpointed_err(std::string msg) const {
+    if (at_end()) {
+        throw std::invalid_argument("Unexpected end of file: " + msg);
+    } else {
+        std::string lno_str = std::to_string(line_no);
+        std::string cno_str = std::to_string(char_no);
+        throw std::invalid_argument("Error on line " + lno_str + " at char" + cno_str + ": " + msg);
+    }
+}
+
+void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
+    size_t opener_idx = line_no;
+    consume(STRING_QUOTE);
+    std::string str_val;
+    while (!at_end() && peek() != STRING_QUOTE) {
+        str_val += consume();
+    }
+    if (at_end()) {
+        throw_pinpointed_err("Unclosed string at" + std::to_string(opener_idx));
+    }
+    consume(STRING_QUOTE);
+    lexemes.push_back(Lexeme{line_no, LexemeType::STRING, str_val});
+}
+
+void Lexer::lex_rule(std::vector<Lexeme>& lexemes) {
+    size_t opener_idx = line_no;
+    consume(RULE_NAME_START);
+    std::string id;
+    while (!at_end() && peek() != STRING_QUOTE) {
+        if (!Lexer::valid_identifier_char(peek())) {
+            std::string bad_char = {peek()};
+            throw_pinpointed_err("Unexpected character '" + bad_char + "' found in rule");
+        }
+        id += consume();
+    }
+    if (at_end()) {
+        throw_pinpointed_err("Unclosed string at" + std::to_string(opener_idx));
+    }
+    consume(RULE_NAME_END);
+    lexemes.push_back(Lexeme{line_no, LexemeType::RULE_IDENTIFIER, id});
+}
+
+void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {
+    std::string id;
+    while (valid_identifier_char(peek())) {
+        id += consume();
+    }
+    lexemes.push_back(Lexeme{line_no, LexemeType::IDENTIFIER, id});
+    continue;
+}

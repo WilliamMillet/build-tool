@@ -1,5 +1,7 @@
 #include "value.hpp"
 
+#include <stdexcept>
+
 ValueList::ValueList(const ValueList& other) {
     elements.reserve(other.elements.size());
     for (const std::unique_ptr<Value>& v : other.elements) {
@@ -59,4 +61,14 @@ Value& Value::operator+=(const Value& other) {
     }
 
     return *this;
+}
+
+void Value::assert_types(const AssertionPair exp) {
+    for (const auto& [got, exp_type] : exp) {
+        ValueType got_type = got.get().get_type();
+        if (got_type != exp_type) {
+            throw std::invalid_argument("Expected type '" + type_string_map.at(exp_type) +
+                                        "' but got type '" + type_string_map.at(got_type) + "'");
+        }
+    }
 }

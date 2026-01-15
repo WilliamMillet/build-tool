@@ -41,9 +41,6 @@ class Parser {
     std::vector<Lexeme> lexemes;
     size_t parse_pos = 0;
 
-    // ID used for uniquely naming configurations.
-    size_t cfg_idx = 0;
-
     inline const static std::unordered_map<std::string, VarCategory> VAR_CAT_NAME_MAP = {
         {"MultiRule", VarCategory::MULTI_RULE},
         {"Rule", VarCategory::RULE},

@@ -1,6 +1,7 @@
 #ifndef VALUE_H
 #define VALUE_H
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -30,6 +31,8 @@ struct ConfigObj {
 
 enum class ValueType { INT, STRING, LIST, ENUM, CFG_OBJ, NONE };
 
+using AssertionPair = std::vector<std::pair<std::reference_wrapper<const Value>, ValueType>>;
+
 class Value {
    public:
     Value();
@@ -47,6 +50,12 @@ class Value {
     ValueType get_type() const;
 
     Value& operator+=(const Value& other);
+
+    /**
+     * Throw an exception if a type does not match it's expected type
+     * @param exp A vector of pairs from values to the expected types
+     */
+    static void assert_types(const AssertionPair exp);
 
    private:
     std::variant<int, std::string, ValueList, ScopedEnumValue, ConfigObj> raw_val;
