@@ -8,14 +8,23 @@
 #include "../lexer.hpp"
 #include "expr.hpp"
 
+enum class VarCategory {
+    REGULAR,
+    RULE,
+    MULTI_RULE,
+    CLEAN,
+};
+
 struct VarLexemes {
     std::string identifier;
     std::vector<Lexeme> lexemes;
+    VarCategory category;
 };
 
 struct ParsedVariable {
     std::string identifier;
     std::unique_ptr<Expr> expr;
+    VarCategory category;
 };
 
 class Parser {
@@ -31,6 +40,14 @@ class Parser {
    private:
     std::vector<Lexeme> lexemes;
     size_t parse_pos = 0;
+
+    // ID used for uniquely naming configurations.
+    size_t cfg_idx = 0;
+
+    inline const static std::unordered_map<std::string, VarCategory> VAR_CAT_NAME_MAP = {
+        {"MultiRule", VarCategory::MULTI_RULE},
+        {"Rule", VarCategory::RULE},
+        {"Clean", VarCategory::CLEAN}};
 
     inline const static std::vector<LexemeType> VALID_IDENTIFIER_SUCCESSORS = {
         LexemeType::EQUALS, LexemeType::BLOCK_START};
@@ -66,10 +83,10 @@ class Parser {
     bool match_type(std::vector<LexemeType> type_pool) const;
 
     /** Parse an assignment from the position after the dest identifier has been parsed */
-    std::unique_ptr<VarLexemes> parse_assignment(std::string&& assignee_id);
+    std::vector<Lexeme> parse_assignment();
 
     /** Parse a config object assignment from the opening parenthesis */
-    std::unique_ptr<VarLexemes> parse_config_assignment(std::string&& assignee_id);
+    VarLexemes parse_cfg_assignment(std::string id);
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();
@@ -82,6 +99,8 @@ class Parser {
 
     /** Parse a ConfigObj from the opening brace to and including the closing brace */
     std::unique_ptr<ConfigObjExpr> parse_config_obj();
+
+    VarCategory categorise_cfg_obj(std::string& id);
 };
 
 #endif

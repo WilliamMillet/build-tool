@@ -7,30 +7,31 @@
 
 #include "../lexer.hpp"
 
+// TO DO
+// Go back to the system where I did f(lexemes) -> expression at the end
+// Return a ParsedFile struct with RuleRegistry and Expr vector
+
 std::vector<ParsedVariable> Parser::parse() {
-    std::vector<VarLexemes> var_lex_vec;
+    std::vector<VarLexemes> var_lexes;
     while (!at_end()) {
         Lexeme lex = peek();
-        if (lex.type == LexemeType::IDENTIFIER) {
+        if (match_type({LexemeType::IDENTIFIER})) {
             std::string id = consume(LexemeType::IDENTIFIER).value;
             expect_type(VALID_IDENTIFIER_SUCCESSORS);
             if (match_type({LexemeType::EQUALS})) {
-                std::unique_ptr<VarLexemes> unevaluated = parse_assignment(std::move(id));
-                var_lex_vec.push_back(std::move(*unevaluated));
+                var_lexes.push_back({std::move(id), parse_assignment(), VarCategory::REGULAR});
             } else {
-                std::unique_ptr<VarLexemes> unevaluated = parse_config_assignment(std::move(id));
-                var_lex_vec.push_back(std::move(*unevaluated));
+                var_lexes.push_back(parse_cfg_assignment(id));
             }
-
         } else {
             consume();
         }
     }
 
     std::vector<ParsedVariable> var_exprs;
-    for (VarLexemes v : var_lex_vec) {
+    for (VarLexemes v : var_lexes) {
         change_lexeme_source(std::move(v.lexemes));
-        var_exprs.push_back({v.identifier, parse_expr()});
+        var_exprs.push_back({v.identifier, parse_expr(), v.category});
     }
     return var_exprs;
 }
@@ -73,17 +74,17 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
     return !at_end() && std::ranges::contains(type_pool, peek().type);
 }
 
-std::unique_ptr<VarLexemes> Parser::parse_assignment(std::string&& assignee_id) {
+std::vector<Lexeme> Parser::parse_assignment() {
     consume(LexemeType::EQUALS);
     expect_type(VARIABLE_STARTS);
     std::vector<Lexeme> assigned_lexemes;
     while (!at_end() && peek().type != LexemeType::NEWLINE) {
         assigned_lexemes.push_back(consume());
     }
-    return std::make_unique<VarLexemes>(std::move(assignee_id), std::move(assigned_lexemes));
+    return assigned_lexemes;
 }
 
-std::unique_ptr<VarLexemes> Parser::parse_config_assignment(std::string&& assignee_id) {
+VarLexemes Parser::parse_cfg_assignment(std::string id) {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};
@@ -109,7 +110,7 @@ std::unique_ptr<VarLexemes> Parser::parse_config_assignment(std::string&& assign
         throw std::invalid_argument("Unclosed parenthesis on line " + bad_line);
     }
 
-    return std::make_unique<VarLexemes>(std::move(assignee_id), std::move(assigned_lexemes));
+    return VarLexemes(std::to_string(cfg_idx), std::move(assigned_lexemes), categorise_cfg_obj(id));
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() {
@@ -189,4 +190,18 @@ std::unique_ptr<ConfigObjExpr> Parser::parse_config_obj() {
     consume(LexemeType::BLOCK_END);
 
     return cfg_expr;
+}
+
+VarCategory Parser::categorise_cfg_obj(std::string& id) {
+    if (id == "Rule") {
+        return VarCategory::RULE;
+    }
+    if (id == "MultiRule") {
+        return VarCategory::MULTI_RULE;
+    }
+    if (id == "Clean") {
+        return VarCategory::CLEAN;
+    }
+
+    throw_pinpointed_err("Invalid rule type");
 }
