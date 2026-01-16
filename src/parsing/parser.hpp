@@ -10,7 +10,7 @@
 
 enum class VarCategory {
     REGULAR,
-    RULE,
+    SINGLE_RULE,
     MULTI_RULE,
     CONFIG,
     CLEAN,

@@ -14,6 +14,7 @@
     - If I do this I can avoid a lot of the incomplete definition issues I faced earlier like not being able to define `vectorise`
 - Consider adding more templates to the Value file. E.g. something that allows you to get a type (like std::string) from an enum (like ValueType::STRING), vice versa or both.
 - As of the 16th my parser does not handle lists maybe? fix that
+- Add more safety checks to the program cause it feels like a house of cards at times
 
 Dev roadmap
 - Redesign `IdentifierRegistry` to become `VariableEvaluator`. It should have an evaluate_all method which returns the following struct

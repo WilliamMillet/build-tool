@@ -1,11 +1,11 @@
-#ifndef RULES_H
-#define RULES_H
+#ifndef SINGLE_RULES_H
+#define SINGLE_RULES_H
 
 #include <string>
 #include <vector>
 
-#include "built_in/enums.hpp"
-#include "value.hpp"
+#include "../built_in/enums.hpp"
+#include "../value.hpp"
 
 enum class RuleType { SINGLE, MULTI, CLEAN };
 

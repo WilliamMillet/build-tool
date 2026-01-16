@@ -7,7 +7,7 @@
 
 enum class LexemeType {
     IDENTIFIER,
-    RULE_IDENTIFIER,
+    SINGLE_RULE_IDENTIFIER,
     ADD,
     EQUALS,
     LINE_START,
@@ -48,8 +48,8 @@ class Lexer {
     constexpr static char LIST_END = ']';
     constexpr static char MACRO_FN_START = '(';
     constexpr static char MACRO_FN_END = ')';
-    constexpr static char RULE_NAME_START = '<';
-    constexpr static char RULE_NAME_END = '>';
+    constexpr static char SINGLE_RULE_NAME_START = '<';
+    constexpr static char SINGLE_RULE_NAME_END = '>';
     constexpr static char STRING_QUOTE = '"';
     constexpr static char SCOPE_RESOLVER = ':';
     constexpr static char DELIMETER = ',';

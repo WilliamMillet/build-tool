@@ -15,8 +15,8 @@ std::vector<ParsedVariable> Parser::parse() {
             std::string id = consume(LexemeType::IDENTIFIER).value;
             expect_type({LexemeType::EQUALS});
             var_lexes.push_back({std::move(id), consume_var_lexemes(), VarCategory::REGULAR});
-        } else if (match_type({LexemeType::RULE_IDENTIFIER})) {
-            std::string rule_str = consume(LexemeType::RULE_IDENTIFIER).value;
+        } else if (match_type({LexemeType::SINGLE_RULE_IDENTIFIER})) {
+            std::string rule_str = consume(LexemeType::SINGLE_RULE_IDENTIFIER).value;
             VarCategory cat = categorise_Dictionary(rule_str);
             std::string id = consume(LexemeType::IDENTIFIER).value;
             var_lexes.push_back({std::move(id), consume_Dictionary_lexemes(), cat});
@@ -191,7 +191,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_config_obj() {
 
 VarCategory Parser::categorise_Dictionary(std::string& id) {
     if (id == "Rule") {
-        return VarCategory::RULE;
+        return VarCategory::SINGLE_RULE;
     }
     if (id == "MultiRule") {
         return VarCategory::MULTI_RULE;

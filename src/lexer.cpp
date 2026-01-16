@@ -49,7 +49,7 @@ std::vector<Lexeme> Lexer::lex() {
                 lex_string(lexemes);
                 break;
             }
-            case RULE_NAME_START: {
+            case SINGLE_RULE_NAME_START: {
                 lex_rule(lexemes);
                 break;
             }
@@ -117,7 +117,7 @@ void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
 
 void Lexer::lex_rule(std::vector<Lexeme>& lexemes) {
     size_t opener_idx = line_no;
-    consume(RULE_NAME_START);
+    consume(SINGLE_RULE_NAME_START);
     std::string id;
     while (!at_end() && peek() != STRING_QUOTE) {
         if (!Lexer::valid_identifier_char(peek())) {
@@ -129,8 +129,8 @@ void Lexer::lex_rule(std::vector<Lexeme>& lexemes) {
     if (at_end()) {
         throw_pinpointed_err("Unclosed string at" + std::to_string(opener_idx));
     }
-    consume(RULE_NAME_END);
-    lexemes.push_back(Lexeme{line_no, LexemeType::RULE_IDENTIFIER, id});
+    consume(SINGLE_RULE_NAME_END);
+    lexemes.push_back(Lexeme{line_no, LexemeType::SINGLE_RULE_IDENTIFIER, id});
 }
 
 void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {

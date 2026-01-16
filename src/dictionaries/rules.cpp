@@ -1,4 +1,4 @@
-#include "./rules.hpp"
+#include "rules.hpp"
 
 SingleRule::SingleRule(std::string _name, Value obj) {
     name = std::move(_name);
