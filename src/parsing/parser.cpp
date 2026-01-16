@@ -17,9 +17,9 @@ std::vector<ParsedVariable> Parser::parse() {
             var_lexes.push_back({std::move(id), consume_var_lexemes(), VarCategory::REGULAR});
         } else if (match_type({LexemeType::RULE_IDENTIFIER})) {
             std::string rule_str = consume(LexemeType::RULE_IDENTIFIER).value;
-            VarCategory cat = categorise_cfg_obj(rule_str);
+            VarCategory cat = categorise_Dictionary(rule_str);
             std::string id = consume(LexemeType::IDENTIFIER).value;
-            var_lexes.push_back({std::move(id), consume_cfg_obj_lexemes(), cat});
+            var_lexes.push_back({std::move(id), consume_Dictionary_lexemes(), cat});
         } else {
             consume();
         }
@@ -81,7 +81,7 @@ std::vector<Lexeme> Parser::consume_var_lexemes() {
     return assigned_lexemes;
 }
 
-std::vector<Lexeme> Parser::consume_cfg_obj_lexemes() {
+std::vector<Lexeme> Parser::consume_Dictionary_lexemes() {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};
@@ -189,7 +189,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_config_obj() {
     return cfg_expr;
 }
 
-VarCategory Parser::categorise_cfg_obj(std::string& id) {
+VarCategory Parser::categorise_Dictionary(std::string& id) {
     if (id == "Rule") {
         return VarCategory::RULE;
     }

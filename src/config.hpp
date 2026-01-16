@@ -1,13 +1,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <memory>
 #include <string>
 
 #include "value.hpp"
 
 class Config {
-    Config(Value cfg_obj);
+    Config(Value Dictionary);
 
     const std::string& get_compiler() const;
     const std::string& get_compilation_flags() const;

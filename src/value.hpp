@@ -11,7 +11,7 @@
 
 class Value;
 
-enum class ValueType { INT, STRING, LIST, ENUM, CFG_OBJ, NONE };
+enum class ValueType { INT, STRING, LIST, ENUM, Dictionary, NONE };
 
 using ValTypePair = std::vector<std::pair<std::reference_wrapper<const Value>, ValueType>>;
 
@@ -135,12 +135,13 @@ class Value {
 namespace ValueUtils {
 /**
  * Get a vectorised list from a ValueList
- * @tparam A non-recursive Value underlying type (e.g. not a map or vector)
+ * @tparam A non-recursive Value underlying type (e.g. not a map or vector). Default is string as
+ * that is by far the most common in this build system
  * @param match The type each element of the list must match
  * @note This cannot be a method of ValueList right now due to incomplete definition issues
  */
 template <typename T>
-std::vector<T> vectorise(ValueList vl, ValueType match) {
+std::vector<T> vectorise(ValueList vl, ValueType match = ValueType::STRING) {
     std::vector<T> vec;
     for (Value& v : vl) {
         v.assert_type(match);

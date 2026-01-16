@@ -1,8 +1,8 @@
 #include "config.hpp"
 
-Config::Config(Value cfg_obj) {
-    cfg_obj.assert_type(ValueType::CFG_OBJ);
-    Dictionary dict = cfg_obj.get<Dictionary>();
+Config::Config(Value cfg_val) {
+    cfg_val.assert_type(ValueType::Dictionary);
+    Dictionary dict = cfg_val.get<Dictionary>();
     dict.assert_contains(
         {{COMPILER_FIELD, ValueType::STRING}, {DEFAULT_RULE_FIELD, ValueType::STRING}});
 

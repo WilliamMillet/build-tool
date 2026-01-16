@@ -64,7 +64,7 @@ Value::Value(ValueList&& x) : raw_val(std::move(x)) { type = ValueType::LIST; }
 
 Value::Value(ScopedEnumValue&& x) : raw_val(std::move(x)) { type = ValueType::ENUM; }
 
-Value::Value(Dictionary&& x) : raw_val(std::move(x)) { type = ValueType::CFG_OBJ; }
+Value::Value(Dictionary&& x) : raw_val(std::move(x)) { type = ValueType::Dictionary; }
 
 ValueType Value::get_type() const { return type; }
 

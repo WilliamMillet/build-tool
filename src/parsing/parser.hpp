@@ -79,7 +79,7 @@ class Parser {
     std::vector<Lexeme> consume_var_lexemes();
 
     /** Parse a config object assignment from the opening parenthesis */
-    std::vector<Lexeme> consume_cfg_obj_lexemes();
+    std::vector<Lexeme> consume_Dictionary_lexemes();
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();
@@ -93,7 +93,7 @@ class Parser {
     /** Parse a Dictionary from the opening brace to and including the closing brace */
     std::unique_ptr<DictionaryExpr> parse_config_obj();
 
-    VarCategory categorise_cfg_obj(std::string& id);
+    VarCategory categorise_Dictionary(std::string& id);
 };
 
 #endif

@@ -75,11 +75,11 @@ Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
 }
 
 Value DictionaryExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
-    Dictionary cfg_obj;
+    Dictionary Dictionary;
 
     for (const auto& [id, expr] : fields_map) {
-        cfg_obj.insert(id, expr->evaluate(var_map, fn_reg));
+        Dictionary.insert(id, expr->evaluate(var_map, fn_reg));
     }
 
-    return Value{std::move(cfg_obj)};
+    return Value{std::move(Dictionary)};
 }
