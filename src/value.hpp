@@ -19,6 +19,8 @@ class ValueList {
    public:
     ValueList() = default;
 
+    ValueList(std::vector<std::unique_ptr<Value>> elems);
+
     ValueList(const ValueList& other);
 
     ValueList& operator=(const ValueList& other);
@@ -97,10 +99,10 @@ class Value {
    public:
     Value();
     Value(int x);
-    Value(std::string&& x);
-    Value(ValueList&& x);
-    Value(ScopedEnumValue&& x);
-    Value(Dictionary&& x);
+    Value(std::string x);
+    Value(ValueList x);
+    Value(ScopedEnumValue x);
+    Value(Dictionary x);
 
     template <typename T>
     const T& get() const {

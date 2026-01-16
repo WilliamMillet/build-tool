@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "funcs/func_registry.hpp"
+#include "built_in/func_registry.hpp"
 #include "parsing/parser.hpp"
 #include "value.hpp"
 

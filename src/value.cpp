@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+ValueList::ValueList(std::vector<std::unique_ptr<Value>> elems) : elements(std::move(elems)) {};
+
 ValueList::ValueList(const ValueList& other) {
     elements.reserve(other.elements.size());
     for (const Value& v : other) {
@@ -58,13 +60,13 @@ Value::Value() { type = ValueType::NONE; }
 
 Value::Value(int x) : raw_val(x) { type = ValueType::INT; }
 
-Value::Value(std::string&& x) : raw_val(std::move(x)) { type = ValueType::STRING; }
+Value::Value(std::string x) : raw_val(std::move(x)) { type = ValueType::STRING; }
 
-Value::Value(ValueList&& x) : raw_val(std::move(x)) { type = ValueType::LIST; }
+Value::Value(ValueList x) : raw_val(std::move(x)) { type = ValueType::LIST; }
 
-Value::Value(ScopedEnumValue&& x) : raw_val(std::move(x)) { type = ValueType::ENUM; }
+Value::Value(ScopedEnumValue x) : raw_val(std::move(x)) { type = ValueType::ENUM; }
 
-Value::Value(Dictionary&& x) : raw_val(std::move(x)) { type = ValueType::Dictionary; }
+Value::Value(Dictionary x) : raw_val(std::move(x)) { type = ValueType::Dictionary; }
 
 ValueType Value::get_type() const { return type; }
 
