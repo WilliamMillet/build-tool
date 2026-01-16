@@ -30,7 +30,7 @@ std::vector<Expr*> FnExpr::get_children() const {
     return res;
 }
 
-std::vector<Expr*> ConfigObjExpr::get_children() const {
+std::vector<Expr*> DictionaryExpr::get_children() const {
     std::vector<Expr*> children;
     for (const std::unique_ptr<Expr>& child : std::views::values(fields_map)) {
         children.push_back(child.get());
@@ -74,11 +74,11 @@ Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
     return fn_reg.call(func_name, std::move(arg_vals));
 }
 
-Value ConfigObjExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
-    ConfigObj cfg_obj;
+Value DictionaryExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
+    Dictionary cfg_obj;
 
     for (const auto& [id, expr] : fields_map) {
-        cfg_obj.fields[id] = expr->evaluate(var_map, fn_reg);
+        cfg_obj.insert(id, expr->evaluate(var_map, fn_reg));
     }
 
     return Value{std::move(cfg_obj)};

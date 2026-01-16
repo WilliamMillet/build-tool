@@ -12,21 +12,8 @@ enum class RuleType { SINGLE, MULTI, CLEAN };
 
 enum class Step { COMPILE, LINK };
 
-struct Rule {
+struct QualifiedObj {
     std::string name;
-    std::vector<std::string> dependencies;
-    Step step;
-
-    Rule(Value rule_name, Value deps, Value step) {
-        Value::assert_types(
-            {{rule_name, ValueType::STRING}, {deps, ValueType::LIST}, {step, ValueType::ENUM}});
-        name = rule_name.get<std::string>();
-
-        for (const std::unique_ptr<Value>& v : deps.get<ValueList>().elements) {
-            Value::assert_types({{*v, ValueType::STRING}});
-            dependencies.push_back(v->get<std::string>());
-        }
-    }
 
     // /** Convert a rule type string to a RuleType enum */
     // static RuleType str_to_type(std::string& type) {
@@ -42,15 +29,26 @@ struct Rule {
     // }
 };
 
-struct SingleRule : public Rule {
+struct SingleRule : Rule {
     std::string output;
+    std::vector<std::string> dependencies;
+    Step step;
+
+    // Rule(std::string rule_name, Value deps, Value step) {
+    //     Value::assert_types({{deps, ValueType::LIST}, {step, ValueType::ENUM}});
+
+    //     for (const std::unique_ptr<Value>& v : deps.get<ValueList>().elements) {
+    //         Value::assert_types({{*v, ValueType::STRING}});
+    //         dependencies.push_back(v->get<std::string>());
+    //     }
+    // };
 };
 
-struct MultiRule : public Rule {
+struct MultiRule : Rule {
     std::vector<std::string> ouput;
 };
 
-struct CleanRule {
+struct CleanRule : Rule {
     std::vector<std::string> targets;
 };
 

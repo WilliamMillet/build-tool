@@ -13,7 +13,8 @@ enum class BinaryOpType { ADD };
 
 using VarMap = std::unordered_map<std::string, Value>;
 
-struct Expr {
+class Expr {
+   public:
     virtual ~Expr() = 0;
 
     /** Singular interface for accessing node children (operands, arguments, etc) */
@@ -23,7 +24,8 @@ struct Expr {
     virtual Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const = 0;
 };
 
-struct BinaryOpExpr : Expr {
+class BinaryOpExpr : public Expr {
+   public:
     BinaryOpType type;
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
@@ -36,7 +38,8 @@ struct BinaryOpExpr : Expr {
         : type(_type), left(std::move(_left)), right(std::move(_right)) {};
 };
 
-struct StringExpr : Expr {
+class StringExpr : public Expr {
+   public:
     std::string val;
 
     std::vector<Expr*> get_children() const override;
@@ -46,7 +49,8 @@ struct StringExpr : Expr {
     StringExpr(std::string s) : val(std::move(s)) {};
 };
 
-struct EnumExpr : Expr {
+class EnumExpr : public Expr {
+   public:
     std::string scope;
     std::string name;
 
@@ -57,7 +61,8 @@ struct EnumExpr : Expr {
         : scope(std::move(_scope)), name(std::move(_name)) {};
 };
 
-struct VarRefExpr : Expr {
+class VarRefExpr : public Expr {
+   public:
     std::string identifier;
 
     std::vector<Expr*> get_children() const override;
@@ -67,7 +72,8 @@ struct VarRefExpr : Expr {
     VarRefExpr(std::string s) : identifier(std::move(s)) {};
 };
 
-struct FnExpr : Expr {
+class FnExpr : public Expr {
+   public:
     std::string func_name;
     std::vector<std::unique_ptr<Expr>> args;
 
@@ -78,7 +84,8 @@ struct FnExpr : Expr {
     FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
 };
 
-struct ConfigObjExpr : Expr {
+class DictionaryExpr : public Expr {
+   public:
     std::unordered_map<std::string, std::unique_ptr<Expr>> fields_map;
 
     std::vector<Expr*> get_children() const override;

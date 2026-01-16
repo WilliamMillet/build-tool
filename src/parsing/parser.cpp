@@ -172,8 +172,8 @@ std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) {
     return fn_expr;
 }
 
-std::unique_ptr<ConfigObjExpr> Parser::parse_config_obj() {
-    std::unique_ptr<ConfigObjExpr> cfg_expr = std::make_unique<ConfigObjExpr>();
+std::unique_ptr<DictionaryExpr> Parser::parse_config_obj() {
+    std::unique_ptr<DictionaryExpr> cfg_expr = std::make_unique<DictionaryExpr>();
     while (!at_end() && !match_type({LexemeType::BLOCK_END})) {
         std::string id = consume(LexemeType::IDENTIFIER).value;
         consume(LexemeType::EQUALS);
@@ -181,7 +181,7 @@ std::unique_ptr<ConfigObjExpr> Parser::parse_config_obj() {
         consume(LexemeType::DELIMETER);
     }
     if (at_end()) {
-        throw_pinpointed_err("Failed to parse ConfigObj");
+        throw_pinpointed_err("Failed to parse Dictionary");
     }
 
     consume(LexemeType::BLOCK_END);
@@ -198,6 +198,9 @@ VarCategory Parser::categorise_cfg_obj(std::string& id) {
     }
     if (id == "Clean") {
         return VarCategory::CLEAN;
+    }
+    if (id == "Config") {
+        return VarCategory::CONFIG;
     }
 
     throw_pinpointed_err("Invalid rule type");
