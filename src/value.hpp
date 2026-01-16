@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -16,13 +17,49 @@ using ValTypePair = std::vector<std::pair<std::reference_wrapper<const Value>, V
 
 class ValueList {
    public:
-    std::vector<std::unique_ptr<Value>> elements;
-
     ValueList() = default;
 
     ValueList(const ValueList& other);
 
     ValueList& operator=(const ValueList& other);
+
+    ValueList& operator+=(const ValueList& other);
+
+    template <typename T>
+    class ValueIterator {
+        using ConstIter = std::vector<std::unique_ptr<Value>>::const_iterator;
+        using RegIter = std::vector<std::unique_ptr<Value>>::iterator;
+        using BaseIter = std::conditional<std::is_const_v<T>, ConstIter, RegIter>::type;
+
+       public:
+        explicit ValueIterator(BaseIter iter) : curr(iter) {};
+
+        ValueIterator& operator++() {
+            curr++;
+            return curr;
+        }
+
+        bool operator!=(const ValueIterator& other) const { return curr != other.curr; }
+
+        T& operator*() const { return **curr; }
+
+        T* operator->() const { return curr->get(); };
+
+       private:
+        BaseIter curr;
+    };
+
+    using iterator = ValueIterator<Value>;
+    using const_iterator = ValueIterator<const Value>;
+
+    iterator begin();
+    iterator end();
+
+    const_iterator begin() const;
+    const_iterator end() const;
+
+   private:
+    std::vector<std::unique_ptr<Value>> elements;
 };
 
 struct ScopedEnumValue {
@@ -94,5 +131,23 @@ class Value {
         {ValueType::ENUM, "Enum"},
         {ValueType::NONE, "None"}};
 };
+
+namespace ValueUtils {
+/**
+ * Get a vectorised list from a ValueList
+ * @tparam A non-recursive Value underlying type (e.g. not a map or vector)
+ * @param match The type each element of the list must match
+ * @note This cannot be a method of ValueList right now due to incomplete definition issues
+ */
+template <typename T>
+std::vector<T> vectorise(ValueList vl, ValueType match) {
+    std::vector<T> vec;
+    for (Value& v : vl) {
+        v.assert_type(match);
+        vec.push_back(std::move(v));
+    }
+}
+
+}  // namespace ValueUtils
 
 #endif

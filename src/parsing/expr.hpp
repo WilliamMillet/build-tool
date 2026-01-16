@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../funcs/func_registry.hpp"
+#include "../built_in/func_registry.hpp"
 #include "../value.hpp"
 
 enum class BinaryOpType { ADD };

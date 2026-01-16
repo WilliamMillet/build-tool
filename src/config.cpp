@@ -35,12 +35,12 @@ const std::string& Config::get_default_rule() const { return default_rule; }
 
 std::string Config::join_list(ValueList list) const {
     std::string joined;
-    for (std::unique_ptr<Value>& flag : list.elements) {
-        flag->assert_type(ValueType::STRING);
+    for (Value& flag : list) {
+        flag.assert_type(ValueType::STRING);
         if (!joined.empty()) {
             joined += " ";
         }
-        joined += flag->get<std::string>();
+        joined += flag.get<std::string>();
     }
 
     return joined;

@@ -1,55 +1,54 @@
 #ifndef RULES_H
 #define RULES_H
 
-#include <memory>
-// #include <stdexcept>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "built_in/enums.hpp"
 #include "value.hpp"
 
 enum class RuleType { SINGLE, MULTI, CLEAN };
 
-enum class Step { COMPILE, LINK };
-
-struct QualifiedObj {
+struct Rule {
     std::string name;
-
-    // /** Convert a rule type string to a RuleType enum */
-    // static RuleType str_to_type(std::string& type) {
-    //     if (type == "Rule") {
-    //         return RuleType::SINGLE;
-    //     } else if (type == "MultiRule") {
-    //         return RuleType::MULTI;
-    //     } else if (type == "Clean") {
-    //         return RuleType::CLEAN;
-    //     } else {
-    //         throw std::invalid_argument("Unknown rule type '<" + type + ">'");
-    //     }
-    // }
 };
 
 struct SingleRule : Rule {
-    std::string output;
-    std::vector<std::string> dependencies;
+    std::vector<std::string> deps;
     Step step;
 
-    // Rule(std::string rule_name, Value deps, Value step) {
-    //     Value::assert_types({{deps, ValueType::LIST}, {step, ValueType::ENUM}});
-
-    //     for (const std::unique_ptr<Value>& v : deps.get<ValueList>().elements) {
-    //         Value::assert_types({{*v, ValueType::STRING}});
-    //         dependencies.push_back(v->get<std::string>());
-    //     }
-    // };
+    SingleRule(std::string _name, Value _deps, Value _step) {
+        name = std::move(_name);
+        Value::assert_types({{_deps, ValueType::LIST}, {_step, ValueType::ENUM}});
+        deps = ValueUtils::vectorise<std::string>(_deps.get<ValueList>(), ValueType::STRING);
+        step = resolve_enum<Step>(_step.get<ScopedEnumValue>());
+    };
 };
 
 struct MultiRule : Rule {
-    std::vector<std::string> ouput;
+    std::vector<std::string> deps;
+    std::vector<std::string> output;
+    Step step;
+
+    MultiRule(std::string _name, Value _deps, Value _output, Value _step) {
+        name = std::move(_name);
+        Value::assert_types(
+            {{_deps, ValueType::LIST}, {_output, ValueType::LIST}, {_step, ValueType::ENUM}});
+        deps = ValueUtils::vectorise<std::string>(_deps.get<ValueList>(), ValueType::STRING);
+        output = ValueUtils::vectorise<std::string>(_output.get<ValueList>(), ValueType::STRING);
+        step = resolve_enum<Step>(_step.get<ScopedEnumValue>());
+    }
 };
 
 struct CleanRule : Rule {
     std::vector<std::string> targets;
+
+    CleanRule(std::string _name, Value _targets) {
+        name = std::move(_name);
+        Value::assert_types({{_targets, ValueType::LIST}});
+        targets = ValueUtils::vectorise<std::string>(_targets.get<ValueList>(), ValueType::STRING);
+    }
 };
 
 #endif

@@ -4,8 +4,8 @@
 
 ValueList::ValueList(const ValueList& other) {
     elements.reserve(other.elements.size());
-    for (const std::unique_ptr<Value>& v : other.elements) {
-        elements.push_back(std::make_unique<Value>(*v));
+    for (const Value& v : other) {
+        elements.push_back(std::make_unique<Value>(v));
     }
 };
 
@@ -15,6 +15,23 @@ ValueList& ValueList::operator=(const ValueList& other) {
     elements.swap(tmp.elements);
     return *this;
 }
+
+ValueList& ValueList::operator+=(const ValueList& other) {
+    for (const Value& v : other) {
+        elements.push_back(std::make_unique<Value>(v));
+    }
+    return *this;
+}
+
+ValueList::iterator ValueList::begin() { return ValueList::iterator(elements.begin()); };
+ValueList::iterator ValueList::end() { return ValueList::iterator(elements.end()); };
+
+ValueList::const_iterator ValueList::begin() const {
+    return ValueList::const_iterator(elements.cbegin());
+};
+ValueList::const_iterator ValueList::end() const {
+    return ValueList::const_iterator(elements.cend());
+};
 
 Value& Dictionary::get(const std::string& key) { return fields.at(key); }
 
@@ -69,11 +86,7 @@ Value& Value::operator+=(const Value& other) {
             break;
         }
         case ValueType::LIST: {
-            auto& base_list = std::get<ValueList>(raw_val).elements;
-            for (const auto& v : std::get<ValueList>(other.raw_val).elements) {
-                base_list.push_back(std::make_unique<Value>(*v));
-            }
-            break;
+            std::get<ValueList>(raw_val) += std::get<ValueList>(raw_val);
         }
         default: {
             std::string type_name = type_string_map.at(type);
