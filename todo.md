@@ -15,6 +15,11 @@
 - Consider adding more templates to the Value file. E.g. something that allows you to get a type (like std::string) from an enum (like ValueType::STRING), vice versa or both.
 - As of the 16th my parser does not handle lists maybe? fix that
 - Add more safety checks to the program cause it feels like a house of cards at times
+- Implement an equivalent of make -j. Apparently topological sort is useful for this
+
+# REALLY GOOD IDEAS
+- Have a cache of the file data. If the build file didnt change between runs, I can just used the cache stuff
+
 
 Dev roadmap
 - Redesign `IdentifierRegistry` to become `VariableEvaluator`. It should have an evaluate_all method which returns the following struct
@@ -34,6 +39,50 @@ class Config {
         // Join flag vectors to single strings and verify 
     }
 }
+
+Plan
+COME UP WITH A MORE IN DEPTH PLAN
+class RuleGraph {
+    public:
+        RuleGraph(Vec<Rule>) rules;
+
+        // Create a subgraph of just files
+        //   - First created a graph class which maps rule names to there dependencies
+        //   - Created a subgraph of rules only (this excludes files)
+        //   - Use Kahns algorithm to topologically sort the array
+        bool cyclical_dep_exists() 
+
+        Vec<String> dependencies(const String& target) const;
+        
+        // Get the commands of a particular target
+        Vec<String> get_build_cmds(const Config& cfg, const String& target) const;
+
+        bool rule_exists(const String& recipe) const
+
+    private:
+        Map<String, Rule> name_to_rule: 
+        Map<String, Vec<String>> dep_map;
+
+}
+
+class RuleRunner {
+    public:
+        RuleRunner(RuleGraph graph);
+    
+        void run_rule(const String& rule) const;
+
+        bool rebuild_needed(const String rule, const deps) const;
+
+        void build_postorder(const String& rule);
+
+        // TO DO - look as posix_spawn vs std::system and alterntives
+        compile(const String& rule);
+        
+    private:
+        RuleGraph graph;
+}
+ 
+
 
 ```
 - Subgoals for the `IdentifierRegistry` -> `VariableEvaluator` refactor:

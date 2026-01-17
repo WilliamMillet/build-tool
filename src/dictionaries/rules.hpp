@@ -18,17 +18,16 @@ inline constexpr static std::string TARGETS = "targets";
 
 struct Rule {
     std::string name;
+    std::vector<std::string> deps;
 };
 
 struct SingleRule : Rule {
-    std::vector<std::string> deps;
     Step step;
 
     SingleRule(std::string _name, Value obj);
 };
 
 struct MultiRule : Rule {
-    std::vector<std::string> deps;
     // The output files. For all i, output[i] will be the output file for deps[i]
     std::vector<std::string> output;
     Step step;
@@ -37,8 +36,6 @@ struct MultiRule : Rule {
 };
 
 struct CleanRule : Rule {
-    std::vector<std::string> targets;
-
     CleanRule(std::string _name, Value obj);
 };
 

@@ -24,12 +24,10 @@ MultiRule::MultiRule(std::string _name, Value obj) {
     step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 }
 
-std::vector<std::string> targets;
-
 CleanRule::CleanRule(std::string _name, Value obj) {
     name = std::move(_name);
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
-    targets = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
+    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
 }

@@ -7,17 +7,13 @@
 
 #include "built_in/func_registry.hpp"
 #include "dictionaries/config.hpp"
+#include "dictionaries/qualified_dicts.hpp"
 #include "dictionaries/rules.hpp"
 #include "parsing/parser.hpp"
 #include "value.hpp"
 
 using DepGraph = std::unordered_map<std::string, std::vector<std::string>>;
 using VarMap = std::unordered_map<std::string, Value>;
-
-struct QualifiedDicts {
-    std::vector<std::unique_ptr<Rule>> rules;
-    Config cfg;
-};
 
 class VariableEvaluator {
    public:
