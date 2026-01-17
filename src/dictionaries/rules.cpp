@@ -2,7 +2,10 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdlib>
+#include <filesystem>
+#include <string>
 #include <system_error>
 
 #include "config.hpp"
@@ -10,26 +13,43 @@
 #include "sys/wait.h"
 #include "unistd.h"
 
-void Rule::try_compile(std::vector<std::string> cmd, Config& cfg) const {
+namespace fs = std::filesystem;
+
+Rule::Rule(std::string qualifier_str) : qualifier("<" + qualifier_str + ">") {};
+
+void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const {
     std::vector<char*> raw_args;
     raw_args.reserve(cmd.size());
     for (std::string& s : cmd) {
         raw_args.push_back(s.data());
     }
 
+    const char* compiler_arr = cfg.get_compiler().data();
     pid_t proc;
-    posix_spawnp(&proc, cfg.get_compiler().data(), nullptr, nullptr, raw_args.data(), environ);
+    int spawn_res = posix_spawnp(&proc, compiler_arr, nullptr, nullptr, raw_args.data(), environ);
+    if (spawn_res != 0) {
+        throw std::system_error(errno, std::generic_category(),
+                                "Compilation failed for '" + qualifier + " " + name + "'");
+    }
 
     int status;
     waitpid(proc, &status, 0);
     if (status != 0) {
-        throw std::system_error(
-            errno, std::generic_category(),
-            "Compilation failed for '<" + get_rule_type_str() + "> " + name + "'");
+        throw std::system_error(errno, std::generic_category(),
+                                "Compilation failed for '" + qualifier + " " + name + "'");
     }
 }
 
-SingleRule::SingleRule(std::string _name, Value obj) {
+bool Rule::has_updated_dep() const {
+    if (!fs::exists(name)) return true;
+
+    auto target_write_t = fs::last_write_time(name);
+    return std::ranges::any_of(deps, [&](std::string d) {
+        return !fs::exists(d) || fs::last_write_time(d) >= target_write_t;
+    });
+}
+
+SingleRule::SingleRule(std::string _name, Value obj) : Rule("Rule") {
     name = std::move(_name);
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
@@ -40,7 +60,27 @@ SingleRule::SingleRule(std::string _name, Value obj) {
     step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 }
 
-MultiRule::MultiRule(std::string _name, Value obj) {
+bool SingleRule::should_run() const { return has_updated_dep(); }
+
+void SingleRule::run(const Config& cfg) const {
+    std::vector<std::string> cmd = {cfg.get_compiler()};
+
+    auto& flags = (step == Step::COMPILE) ? cfg.get_compilation_flags() : cfg.get_link_flags();
+    for (const std::string& flag : flags) {
+        cmd.push_back(flag);
+    }
+
+    for (const std::string& dep : deps) {
+        cmd.push_back(dep);
+    }
+
+    cmd.push_back("-o");
+    cmd.push_back(name);
+
+    try_compile(cmd, cfg);
+}
+
+MultiRule::MultiRule(std::string _name, Value obj) : Rule("MultiRule") {
     name = std::move(_name);
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
@@ -59,39 +99,9 @@ MultiRule::MultiRule(std::string _name, Value obj) {
     step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 }
 
-CleanRule::CleanRule(std::string _name, Value obj) {
-    name = std::move(_name);
-    obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
-    dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
-}
+bool MultiRule::should_run() const { return has_updated_dep(); }
 
-const std::string& MultiRule::get_rule_type_str() const { return RULE_TYPE_STR; }
-
-const std::string& SingleRule::get_rule_type_str() const { return RULE_TYPE_STR; }
-
-const std::string& CleanRule::get_rule_type_str() const { return RULE_TYPE_STR; }
-
-void SingleRule::run(Config& cfg) const {
-    std::vector<std::string> cmd = {cfg.get_compiler()};
-
-    auto& flags = (step == Step::COMPILE) ? cfg.get_compilation_flags() : cfg.get_link_flags();
-    for (const std::string& flag : flags) {
-        cmd.push_back(flag);
-    }
-
-    for (const std::string& dep : deps) {
-        cmd.push_back(dep);
-    }
-
-    cmd.push_back("-o");
-    cmd.push_back(name);
-
-    try_compile(cmd, cfg);
-}
-
-void MultiRule::run(Config& cfg) const {
+void MultiRule::run(const Config& cfg) const {
     // Invariant deps.size() == output.size() should be enforced in the constructor
     for (size_t i = 0; i < deps.size(); i++) {
         std::vector<std::string> cmd = {cfg.get_compiler()};
@@ -108,7 +118,18 @@ void MultiRule::run(Config& cfg) const {
     }
 }
 
-void CleanRule::run(Config&) const {
+CleanRule::CleanRule(std::string _name, Value obj) : Rule("Clean") {
+    name = std::move(_name);
+    obj.assert_type(ValueType::Dictionary);
+    Dictionary dict = obj.get<Dictionary>();
+    dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
+    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
+}
+
+/** There is no condition on cleaning */
+bool CleanRule::should_run() const { return true; }
+
+void CleanRule::run(const Config&) const {
     char proc_name[] = "rm";
     std::vector<char*> args = {proc_name};
     args.reserve(deps.size() + 1);
@@ -119,5 +140,16 @@ void CleanRule::run(Config&) const {
     }
 
     pid_t pid;
-    posix_spawnp(&pid, proc_name, nullptr, nullptr, args.data(), environ);
+    int spawn_res = posix_spawnp(&pid, proc_name, nullptr, nullptr, args.data(), environ);
+    if (spawn_res != 0) {
+        throw std::system_error(errno, std::generic_category(),
+                                "Clean failed for '" + qualifier + " " + name + "'");
+    }
+
+    int status;
+    waitpid(pid, &status, 0);
+    if (status != 0) {
+        throw std::system_error(errno, std::generic_category(),
+                                "Clean failed for '" + qualifier + " " + name + "'");
+    }
 }

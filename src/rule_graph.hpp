@@ -27,6 +27,9 @@ class RuleGraph {
     /** Get the number of rules in the graph */
     size_t num_rules() const;
 
+    /** Get the rule with a given name*/
+    const Rule& get_rule(const std::string& name) const;
+
    private:
     std::unordered_map<std::string, Rule> name_to_rule;
     /** Map of rule to there dependencies. No keys exist for files/non-rule dependencies */

@@ -9,9 +9,9 @@
 
 RuleGraph::RuleGraph(std::vector<Rule> rules) {
     for (Rule& rule : rules) {
-        std::string name = rule.name;
+        std::string name = rule.get_name();
         name_to_rule[name] = std::move(rule);
-        for (const std::string& dep : rule.deps) {
+        for (const std::string& dep : rule.get_deps()) {
             dep_map[name].push_back(dep);
         }
     }
@@ -66,3 +66,5 @@ const std::vector<std::string>& RuleGraph::dependencies(const std::string& targe
 bool RuleGraph::is_rule(const std::string& rule) const { return name_to_rule.contains(rule); }
 
 size_t RuleGraph::num_rules() const { return name_to_rule.size(); }
+
+const Rule& RuleGraph::get_rule(const std::string& name) const { return name_to_rule.at(name); }
