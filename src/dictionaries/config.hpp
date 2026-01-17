@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <string>
+#include <vector>
 
 #include "../value.hpp"
 
@@ -10,8 +11,8 @@ class Config {
     Config(std::string _name, Value dict);
 
     const std::string& get_compiler() const;
-    const std::string& get_compilation_flags() const;
-    const std::string& get_link_flags() const;
+    const std::vector<std::string>& get_compilation_flags() const;
+    const std::vector<std::string>& get_link_flags() const;
     const std::string& get_default_rule() const;
 
    private:
@@ -22,12 +23,9 @@ class Config {
 
     std::string name;
     std::string compiler;
-    std::string compilation_flags;
-    std::string link_flags;
+    std::vector<std::string> compilation_flags;
+    std::vector<std::string> link_flags;
     std::string default_rule;
-
-    /** Join a ValueList of strings into a space separated string and return this */
-    std::string join_list(ValueList list) const;
 };
 
 #endif

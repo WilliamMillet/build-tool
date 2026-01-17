@@ -16,6 +16,8 @@
 - As of the 16th my parser does not handle lists maybe? fix that
 - Add more safety checks to the program cause it feels like a house of cards at times
 - Implement an equivalent of make -j. Apparently topological sort is useful for this
+- Right now, MultiRule compiles everything, even if only one command needs running. Maybe fix this
+- May be some const correctness issues throughout the code. Search and address any I find
 
 # REALLY GOOD IDEAS
 - Have a cache of the file data. If the build file didnt change between runs, I can just used the cache stuff
@@ -80,6 +82,7 @@ class RuleRunner {
         
     private:
         RuleGraph graph;
+        Config 
 }
  
 

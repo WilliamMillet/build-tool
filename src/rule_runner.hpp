@@ -1,16 +1,18 @@
 #ifndef RULE_RUNNER_H
 #define RULE_RUNNER_H
 
-#include "dictionaries/qualified_dicts.hpp"
-
+#include "rule_graph.hpp"
 
 class RuleRunner {
+   public:
+    RuleRunner(RuleGraph rule_graph, Config config);
 
-    RuleRunner(QualifiedDicts qualified_dicts);
+    /** Run a specified user rule */
+    void run_rule(std::string rule_name) const;
 
-    void run_command(std::string command_name)
+   private:
+    RuleGraph graph;
+    Config cfg;
 };
-
-
 
 #endif

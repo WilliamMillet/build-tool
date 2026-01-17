@@ -9,13 +9,13 @@ Config::Config(std::string _name, Value cfg_val) : name(_name) {
     compiler = dict.get(COMPILER_FIELD).get<std::string>();
     default_rule = dict.get(DEFAULT_SINGLE_RULE_FIELD).get<std::string>();
 
-    std::vector<std::pair<std::string, std::string>> flag_pair = {
+    std::vector<std::pair<std::string, std::vector<std::string>>> flag_pair = {
         {COMPILATION_FLAGS_FIELD, compilation_flags}, {LINK_FLAGS_FIELD, link_flags}};
     for (auto& [field_name, out] : flag_pair) {
         if (dict.contains(field_name)) {
             dict.assert_contains({{field_name, ValueType::LIST}});
             ValueList flag_list = dict.get(field_name).get<ValueList>();
-            out = join_list(flag_list);
+            out = ValueUtils::vectorise<std::string>(dict.get(field_name).get<ValueList>());
         }
     }
 
@@ -27,21 +27,8 @@ Config::Config(std::string _name, Value cfg_val) : name(_name) {
 
 const std::string& Config::get_compiler() const { return compiler; }
 
-const std::string& Config::get_compilation_flags() const { return compilation_flags; }
+const std::vector<std::string>& Config::get_compilation_flags() const { return compilation_flags; }
 
-const std::string& Config::get_link_flags() const { return link_flags; }
+const std::vector<std::string>& Config::get_link_flags() const { return link_flags; }
 
 const std::string& Config::get_default_rule() const { return default_rule; }
-
-std::string Config::join_list(ValueList list) const {
-    std::string joined;
-    for (Value& flag : list) {
-        flag.assert_type(ValueType::STRING);
-        if (!joined.empty()) {
-            joined += " ";
-        }
-        joined += flag.get<std::string>();
-    }
-
-    return joined;
-}
