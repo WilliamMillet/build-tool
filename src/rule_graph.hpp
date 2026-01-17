@@ -1,6 +1,7 @@
 #ifndef RULE_GRAPH_H
 #define RULE_GRAPH_H
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -10,7 +11,7 @@
 
 class RuleGraph {
    public:
-    RuleGraph(std::vector<Rule> rules);
+    RuleGraph(std::vector<std::unique_ptr<Rule>> rules);
 
     /** Determine if there is a cyclical dependency amongst rules */
     bool cyclical_dep_exists() const;
@@ -31,7 +32,7 @@ class RuleGraph {
     const Rule& get_rule(const std::string& name) const;
 
    private:
-    std::unordered_map<std::string, Rule> name_to_rule;
+    std::unordered_map<std::string, std::unique_ptr<Rule>> name_to_rule;
     /** Map of rule to there dependencies. No keys exist for files/non-rule dependencies */
     std::unordered_map<std::string, std::vector<std::string>> dep_map;
 };

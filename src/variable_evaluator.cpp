@@ -103,12 +103,15 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
     switch (var.category) {
         case VarCategory::CLEAN: {
             rules.push_back(std::make_unique<CleanRule>(std::move(var.identifier), std::move(val)));
+            break;
         }
         case VarCategory::SINGLE_RULE: {
             rules.push_back(std::make_unique<SingleRule>(std::move(id), std::move(val)));
+            break;
         }
         case VarCategory::MULTI_RULE: {
             rules.push_back(std::make_unique<MultiRule>(std::move(id), std::move(val)));
+            break;
         }
         case VarCategory::CONFIG: {
             if (cfg != nullptr) {
@@ -116,9 +119,11 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
                     "Duplicate <Config> dictionaries detected. Only one configuration may be set");
             }
             cfg = std::make_unique<Config>(std::move(id), std::move(val));
+            break;
         }
         case VarCategory::REGULAR: {
             // Not a qualified dictionary so we skip
+            break;
         };
     }
 }

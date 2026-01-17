@@ -49,7 +49,7 @@ void Dictionary::assert_contains(const std::vector<std::pair<std::string, ValueT
         }
         try {
             itm->second.assert_type(field_type);
-        } catch (std::invalid_argument err) {
+        } catch (const std::invalid_argument& err) {
             throw std::invalid_argument("Failed to parse dictionary field '" + field +
                                         "': " + err.what());
         }
@@ -89,6 +89,7 @@ Value& Value::operator+=(const Value& other) {
         }
         case ValueType::LIST: {
             std::get<ValueList>(raw_val) += std::get<ValueList>(raw_val);
+            break;
         }
         default: {
             std::string type_name = type_string_map.at(type);

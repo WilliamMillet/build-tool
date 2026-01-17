@@ -1,19 +1,20 @@
 #include "rule_graph.hpp"
 
 #include <deque>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "dictionaries/rules.hpp"
 
-RuleGraph::RuleGraph(std::vector<Rule> rules) {
-    for (Rule& rule : rules) {
-        std::string name = rule.get_name();
-        name_to_rule[name] = std::move(rule);
-        for (const std::string& dep : rule.get_deps()) {
+RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) {
+    for (std::unique_ptr<Rule>& rule : rules) {
+        std::string name = rule->get_name();
+        for (const std::string& dep : rule->get_deps()) {
             dep_map[name].push_back(dep);
         }
+        name_to_rule[name] = std::move(rule);
     }
 }
 
@@ -36,7 +37,7 @@ bool RuleGraph::cyclical_dep_exists() const {
         }
     }
 
-    int reached = 0;
+    size_t reached = 0;
     while (!q.empty()) {
         std::string v = q.front();
         q.pop_front();
@@ -52,7 +53,7 @@ bool RuleGraph::cyclical_dep_exists() const {
     }
 
     // If we were not able to reach all rules there was a cycle
-    return reached = num_rules();
+    return (reached == num_rules());
 }
 
 const std::vector<std::string>& RuleGraph::dependencies(const std::string& target) const {
@@ -67,4 +68,4 @@ bool RuleGraph::is_rule(const std::string& rule) const { return name_to_rule.con
 
 size_t RuleGraph::num_rules() const { return name_to_rule.size(); }
 
-const Rule& RuleGraph::get_rule(const std::string& name) const { return name_to_rule.at(name); }
+const Rule& RuleGraph::get_rule(const std::string& name) const { return *name_to_rule.at(name); }

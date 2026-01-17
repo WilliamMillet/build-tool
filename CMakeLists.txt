@@ -19,6 +19,6 @@ add_compile_options(
 
 add_link_options(-fsanitize=address,undefined)
 
-file(GLOB ALL_SOURCES "src/*.cpp")
+file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
 
 add_executable(my_make ${ALL_SOURCES})

@@ -38,7 +38,7 @@ class ValueList {
 
         ValueIterator& operator++() {
             curr++;
-            return curr;
+            return *this;
         }
 
         bool operator!=(const ValueIterator& other) const { return curr != other.curr; }

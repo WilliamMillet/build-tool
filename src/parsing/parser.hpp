@@ -1,5 +1,5 @@
-#ifndef VALUE_REGISTRY_H
-#define VALUE_REGISTRY_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <memory>
 #include <string>
