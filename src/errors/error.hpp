@@ -48,6 +48,8 @@ class Error : public std::exception {
      */
     [[noreturn]] static void update_and_throw(std::exception& excep, std::string ctx, Location loc);
 
+    [[noreturn]] static void update_and_throw(std::exception& excep, std::string ctx);
+
    private:
     // A stack of events that were occurring when the error was thrown with increased
     // specificity (e.g. {"Parsing", "Parsing identifier 'name'"})
@@ -105,6 +107,28 @@ class ValueError : public Error {
    public:
     ValueError(std::string _msg, Location _loc);
     ValueError(std::string _msg = "");
+
+    std::string err_name() const override;
+};
+
+/** There is a logical issue with the program. E.g. cyclical dependencies  */
+class LogicError : public Error {
+   public:
+    LogicError(std::string _msg, Location _loc);
+    LogicError(std::string _msg = "");
+
+    std::string err_name() const override;
+};
+
+/**
+ * External error related to the system itself like a process failing to spawn. The message
+ * associated with the errno value at the time of construction will be used in addition to any user
+ * provided message.
+ */
+class SystemError : public Error {
+   public:
+    SystemError(std::string _msg, Location _loc);
+    SystemError(std::string _msg = "");
 
     std::string err_name() const override;
 };

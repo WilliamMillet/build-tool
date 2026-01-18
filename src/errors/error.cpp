@@ -1,5 +1,7 @@
 #include "error.hpp"
 
+#include <cstring>
+
 #include "../file_utils.hpp"
 
 size_t Location::line_start() const { return file_idx - col_no; }
@@ -46,7 +48,7 @@ std::string Error::format_excerpt(const std::string& src_file) const {
     try {
         chunk = FileUtils::read_chunk(src_file, loc->line_start());
     } catch (const std::exception& e) {
-        std::string err_msg = "Failed to read code excerpt: ";
+        std::string err_msg = "Failed to read code excerpt";
         err_msg += e.what();
         return err_msg;
     }
@@ -97,6 +99,15 @@ void Error::update_and_throw(std::exception& excep, std::string ctx, Location lo
     throw UnknownError(excep, ctx, loc);
 }
 
+void Error::update_and_throw(std::exception& excep, std::string ctx) {
+    if (Error* err = dynamic_cast<Error*>(&excep)) {
+        err->add_ctx(ctx);
+        throw;
+    }
+
+    throw UnknownError(excep, ctx);
+}
+
 UnknownError::UnknownError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 UnknownError::UnknownError(std::string _msg) : Error(_msg) {}
 std::string UnknownError::err_name() const { return "UnknownError"; }
@@ -110,6 +121,7 @@ UnknownError::UnknownError(const std::exception& excep, std::string ctx) : Error
     add_ctx(ctx);
 };
 
+// TODO - Consider deleting this IOError im not using it anywhere. Either that or user it
 IOError::IOError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 IOError::IOError(std::string _msg) : Error(_msg) {}
 std::string IOError::err_name() const { return "IOError"; }
@@ -125,3 +137,13 @@ std::string TypeError::err_name() const { return "TypeError"; }
 ValueError::ValueError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 ValueError::ValueError(std::string _msg) : Error(_msg) {}
 std::string ValueError::err_name() const { return "ValueError"; }
+
+LogicError::LogicError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+LogicError::LogicError(std::string _msg) : Error(_msg) {}
+std::string LogicError::err_name() const { return "LogicError"; }
+
+SystemError::SystemError(std::string _msg, Location _loc)
+    : Error(std::string(std::strerror(errno)) + "." + _msg, _loc) {}
+SystemError::SystemError(std::string _msg)
+    : Error(std::string(std::strerror(errno)) + "." + _msg) {}
+std::string SystemError::err_name() const { return "LogicError"; }
