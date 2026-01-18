@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "errors/error.hpp"
+
 enum class LexemeType {
     IDENTIFIER,
     SINGLE_RULE_IDENTIFIER,
@@ -28,9 +30,7 @@ enum class LexemeType {
 struct Lexeme {
     LexemeType type;
     std::string value;
-    size_t line_no;
-    size_t col_no;
-    size_t file_idx;
+    Location loc;
 };
 
 class Lexer {

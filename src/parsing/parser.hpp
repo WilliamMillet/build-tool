@@ -30,7 +30,7 @@ struct ParsedVariable {
 
 class Parser {
    public:
-    Parser(std::vector<Lexeme> _lexemes) : lexemes(_lexemes) {};
+    Parser(std::vector<Lexeme> _lexemes);
 
     /**
      * Parse the current lexeme source and return all the variables found. Function is single use

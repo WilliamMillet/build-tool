@@ -5,9 +5,12 @@
 #include <stdexcept>
 #include <string>
 
+#include "../errors/error.hpp"
 #include "../lexer.hpp"
 
-std::vector<ParsedVariable> Parser::parse() {
+Parser::Parser(std::vector<Lexeme> _lexemes) : lexemes(_lexemes) {};
+
+std::vector<ParsedVariable> Parser::parse() try {
     std::vector<VarLexemes> var_lexes;
     while (!at_end()) {
         Lexeme lex = peek();
@@ -31,6 +34,11 @@ std::vector<ParsedVariable> Parser::parse() {
         var_exprs.push_back({v.identifier, parse_expr(), v.category});
     }
     return var_exprs;
+} catch (Error& e) {
+    e.update("Lexing", at_end() ? Location::eof_loc() : peek().loc);
+    throw;
+} catch (const std::exception& excep) {
+    throw UnknownError(excep, "Lexing", at_end() ? Location::eof_loc() : peek().loc);
 }
 
 Lexeme Parser::peek() const { return lexemes.at(parse_pos); }

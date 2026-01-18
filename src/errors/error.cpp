@@ -1,6 +1,16 @@
 #include "error.hpp"
 
+#include <memory>
+
 #include "../file_utils.hpp"
+
+size_t Location::line_start() const { return file_idx - col_no; }
+
+bool Location::is_eof() const {
+    return (line_no == END_OF_FILE) && (col_no == END_OF_FILE) && (file_idx == END_OF_FILE);
+};
+
+Location Location::eof_loc() { return Location{END_OF_FILE, END_OF_FILE, END_OF_FILE}; }
 
 Error::Error(std::string _msg, Location _loc) : loc(_loc), msg(_msg) {};
 
@@ -12,6 +22,12 @@ void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
 
 bool Error::has_loc() const { return loc.has_value(); };
 
+void Error::update(std::string ctx, Location new_loc) {
+    add_ctx(ctx);
+    if (!has_loc()) {
+        loc = new_loc;
+    }
+}
 std::string Error::format(const std::string& src_file) const {
     std::string err = "Exception thrown: " + err_name();
     err += "\nMessage: " + msg;
@@ -34,7 +50,14 @@ std::string Error::format(const std::string& src_file) const {
 }
 
 std::string Error::format_excerpt(const std::string& src_file) const {
-    const std::vector<std::string> chunk = FileUtils::read_chunk(src_file, loc->line_start());
+    std::vector<std::string> chunk;
+    try {
+        chunk = FileUtils::read_chunk(src_file, loc->line_start());
+    } catch (const std::exception& e) {
+        std::string err_msg = "Failed to read code excerpt: ";
+        err_msg += e.what();
+        return err_msg;
+    }
 
     const std::string initial_lno = std::to_string(loc->line_no);
     const std::string whitespace_prefix = std::string(initial_lno.size(), ' ');
@@ -73,6 +96,15 @@ std::string Error::format_excerpt(const std::string& src_file) const {
 UnknownError::UnknownError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 UnknownError::UnknownError(std::string _msg) : Error(_msg) {}
 std::string UnknownError::err_name() const { return "UnknownError"; }
+
+UnknownError::UnknownError(const std::exception& excep, std::string ctx, Location _loc)
+    : Error(excep.what(), _loc) {
+    add_ctx(ctx);
+};
+
+UnknownError::UnknownError(const std::exception& excep, std::string ctx) : Error(excep.what()) {
+    add_ctx(ctx);
+};
 
 IOError::IOError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 IOError::IOError(std::string _msg) : Error(_msg) {}

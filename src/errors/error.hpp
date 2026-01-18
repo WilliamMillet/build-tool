@@ -1,14 +1,23 @@
+#ifndef CUSTOM_ERR_H
+#define CUSTOM_ERR_H
+
 #include <exception>
+#include <limits>
 #include <optional>
 #include <string>
 #include <vector>
 
 struct Location {
+    constexpr static size_t END_OF_FILE = std::numeric_limits<size_t>::max();
     size_t line_no;
     size_t col_no;
     size_t file_idx;
 
-    size_t line_start() const { return file_idx - col_no; }
+    size_t line_start() const;
+
+    bool is_eof() const;
+
+    static Location eof_loc();
 };
 
 class Error : public std::exception {
@@ -24,6 +33,9 @@ class Error : public std::exception {
 
     /** Returns true if and only if the location field has been set */
     bool has_loc() const;
+
+    /** Update with new context and set the location if it has not been set */
+    void update(std::string ctx, Location new_loc);
 
     /**
      * Return a formatted error including the error type, an excerpt of the file where it occurred
@@ -50,6 +62,9 @@ class UnknownError : public Error {
    public:
     UnknownError(std::string _msg, Location _loc);
     UnknownError(std::string _msg = "");
+
+    UnknownError(const std::exception& excep, std::string ctx, Location loc);
+    UnknownError(const std::exception& excep, std::string ctx);
 
     std::string err_name() const override;
 };
@@ -89,3 +104,5 @@ class ValueError : public Error {
 
     std::string err_name() const override;
 };
+
+#endif

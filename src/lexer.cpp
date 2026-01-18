@@ -64,13 +64,10 @@ std::vector<Lexeme> Lexer::lex() try {
 
     return lexemes;
 } catch (Error& e) {
-    e.add_ctx("Lexing process");
-    if (!e.has_loc()) {
-        e.set_loc({line_no, col_no, file_pos});
-    }
+    e.update("Lexing", {line_no, col_no, file_pos});
     throw;
-} catch (std::exception& e) {
-    throw UnknownError(e.what(), {line_no, col_no, file_pos});
+} catch (const std::exception& excep) {
+    throw UnknownError(excep, "Lexing", {line_no, col_no, file_pos});
 }
 
 bool Lexer::valid_identifier_char(char c) { return std::isalnum(c) || c == '_'; };
@@ -151,5 +148,5 @@ void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {
 }
 
 Lexeme Lexer::make_lexeme(LexemeType type, std::string val) const {
-    return Lexeme{type, val, line_no, col_no, file_pos};
+    return Lexeme{type, val, Location{line_no, col_no, file_pos}};
 }
