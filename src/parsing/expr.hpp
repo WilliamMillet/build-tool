@@ -15,7 +15,7 @@ using VarMap = std::unordered_map<std::string, Value>;
 
 class Expr {
    public:
-    virtual ~Expr() = 0;
+    virtual ~Expr() = default;
 
     /** Singular interface for accessing node children (operands, arguments, etc) */
     virtual std::vector<Expr*> get_children() const = 0;

@@ -17,6 +17,9 @@ namespace fs = std::filesystem;
 
 Rule::Rule(std::string qualifier_str) : qualifier("<" + qualifier_str + ">") {};
 
+const std::vector<std::string>& Rule::get_deps() const { return deps; };
+const std::string& Rule::get_name() const { return name; };
+
 void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const {
     std::vector<char*> raw_args;
     raw_args.reserve(cmd.size());

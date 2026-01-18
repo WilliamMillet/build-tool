@@ -30,10 +30,10 @@ class Rule {
     const std::string& get_name() const;
     const std::vector<std::string>& get_deps() const;
 
-    virtual ~Rule() = 0;
+    virtual ~Rule() = default;
 
     /** Execute the rule (e.g. build the file if its a SingleRule, clean if its a CleanRule) */
-    virtual void run(const Config& cfg) const;
+    virtual void run(const Config& cfg) const = 0;
 
     /**
      * Determine if it's necessary to run the rule at a given time (e.g. for a SingleRule, this
@@ -44,7 +44,7 @@ class Rule {
      * if it could be called from any position, then it would have to do it's own recursive check
      * which would lead to O(n^2) runtime for the entire traversal.
      */
-    virtual bool should_run() const;
+    virtual bool should_run() const = 0;
 
    protected:
     std::string name;
@@ -77,8 +77,6 @@ class SingleRule : public Rule {
 class MultiRule : public Rule {
    public:
     MultiRule(std::string _name, Value obj);
-
-    const std::vector<std::string>& get_output() const;
 
     void run(const Config& cfg) const override;
 

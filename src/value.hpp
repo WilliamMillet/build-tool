@@ -147,8 +147,9 @@ std::vector<T> vectorise(ValueList vl, ValueType match = ValueType::STRING) {
     std::vector<T> vec;
     for (Value& v : vl) {
         v.assert_type(match);
-        vec.push_back(std::move(v));
+        vec.push_back(std::move(v.get<T>()));
     }
+    return vec;
 }
 
 }  // namespace ValueUtils

@@ -29,9 +29,8 @@ struct Lexeme {
     LexemeType type;
     std::string value;
     size_t line_no;
-
-    Lexeme(size_t line_no_, LexemeType type_, std::string value_ = "")
-        : type(type_), value(value_), line_no(line_no_) {};
+    size_t col_no;
+    size_t file_idx;
 };
 
 class Lexer {
@@ -72,8 +71,14 @@ class Lexer {
 
     constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile";
     std::string src;
+    // The absolute offset from the start of the stringified file
+    size_t file_pos = 0;
+
     size_t line_no = 0;
-    size_t char_no = 0;
+    // Offset from the start of the current line
+    size_t col_no = 0;
+
+    std::vector<size_t> line_starts;
 
     /** Returns the next character in the src */
     char peek() const;
@@ -97,9 +102,11 @@ class Lexer {
 
     void lex_string(std::vector<Lexeme>& lexemes);
 
-    void lex_rule(std::vector<Lexeme>& lexemes);
+    void lex_rule_id(std::vector<Lexeme>& lexemes);
 
     void lex_identifier(std::vector<Lexeme>& lexemes);
+
+    Lexeme make_lexeme(LexemeType type, std::string val = "") const;
 };
 
 #endif
