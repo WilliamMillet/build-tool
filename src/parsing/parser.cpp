@@ -14,14 +14,15 @@ std::vector<ParsedVariable> Parser::parse() try {
     while (!at_end()) {
         Lexeme lex = peek();
         if (match_type({LexemeType::IDENTIFIER})) {
-            std::string id = consume(LexemeType::IDENTIFIER).value;
-            expect_type({LexemeType::EQUALS});
-            var_lexes.push_back({std::move(id), consume_var_lexemes(), VarCategory::REGULAR});
+            Lexeme id_lex = consume(LexemeType::IDENTIFIER);
+            consume(LexemeType::EQUALS);
+            var_lexes.push_back(
+                {std::move(id_lex.value), consume_var_lexemes(), VarCategory::REGULAR, id_lex.loc});
         } else if (match_type({LexemeType::SINGLE_RULE_IDENTIFIER})) {
-            std::string rule_str = consume(LexemeType::SINGLE_RULE_IDENTIFIER).value;
-            VarCategory cat = categorise_dictionary(rule_str);
+            Lexeme rule_lex = consume(LexemeType::SINGLE_RULE_IDENTIFIER);
+            VarCategory cat = categorise_dictionary(rule_lex.value);
             std::string id = consume(LexemeType::IDENTIFIER).value;
-            var_lexes.push_back({std::move(id), consume_dictionary_lexemes(), cat});
+            var_lexes.push_back({std::move(id), consume_dict_lexemes(), cat, rule_lex.loc});
         } else {
             consume();
         }
@@ -30,11 +31,11 @@ std::vector<ParsedVariable> Parser::parse() try {
     std::vector<ParsedVariable> var_exprs;
     for (VarLexemes v : var_lexes) {
         change_lexeme_source(std::move(v.lexemes));
-        var_exprs.push_back({v.identifier, parse_expr(), v.category});
+        var_exprs.push_back({v.identifier, parse_expr(), v.category, v.start_loc});
     }
     return var_exprs;
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Lexing", get_loc());
+    Error::update_and_throw(excep, "Parsing", get_loc());
 }
 
 Lexeme Parser::peek() const { return lexemes.at(parse_pos); }
@@ -69,7 +70,6 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
 }
 
 std::vector<Lexeme> Parser::consume_var_lexemes() try {
-    consume(LexemeType::EQUALS);
     expect_type(VARIABLE_STARTS);
     std::vector<Lexeme> assigned_lexemes;
     while (!at_end() && peek().type != LexemeType::NEWLINE) {
@@ -80,7 +80,7 @@ std::vector<Lexeme> Parser::consume_var_lexemes() try {
     Error::update_and_throw(excep, "Consuming variable lexemes", get_loc());
 }
 
-std::vector<Lexeme> Parser::consume_dictionary_lexemes() try {
+std::vector<Lexeme> Parser::consume_dict_lexemes() try {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};

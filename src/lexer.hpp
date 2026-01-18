@@ -95,7 +95,7 @@ class Lexer {
 
     void lex_string(std::vector<Lexeme>& lexemes);
 
-    void lex_rule_id(std::vector<Lexeme>& lexemes);
+    void lex_rule_qualifier(std::vector<Lexeme>& lexemes);
 
     void lex_identifier(std::vector<Lexeme>& lexemes);
 

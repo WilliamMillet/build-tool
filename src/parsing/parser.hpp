@@ -20,12 +20,14 @@ struct VarLexemes {
     std::string identifier;
     std::vector<Lexeme> lexemes;
     VarCategory category;
+    Location start_loc;
 };
 
 struct ParsedVariable {
     std::string identifier;
     std::unique_ptr<Expr> expr;
     VarCategory category;
+    Location loc;
 };
 
 class Parser {
@@ -79,7 +81,7 @@ class Parser {
     std::vector<Lexeme> consume_var_lexemes();
 
     /** Parse a config object assignment from the opening parenthesis */
-    std::vector<Lexeme> consume_dictionary_lexemes();
+    std::vector<Lexeme> consume_dict_lexemes();
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();

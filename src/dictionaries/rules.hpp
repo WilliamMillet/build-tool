@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../built_in/enums.hpp"
+#include "../errors/error.hpp"
 #include "../value.hpp"
 #include "config.hpp"
 
@@ -25,10 +26,11 @@ inline constexpr static std::string TARGETS = "targets";
 
 class Rule {
    public:
-    Rule(std::string qualifier_str);
+    Rule(std::string _qualifier, std::string _name, Location _loc);
 
     const std::string& get_name() const;
     const std::vector<std::string>& get_deps() const;
+    const Location& get_loc() const;
 
     virtual ~Rule() = default;
 
@@ -47,8 +49,10 @@ class Rule {
     virtual bool should_run() const = 0;
 
    protected:
+    std::string qualifier;
     std::string name;
     std::vector<std::string> deps;
+    Location loc;
 
     /** Attempt to run a compilation command */
     void try_compile(std::vector<std::string>& cmd, const Config& cfg) const;
@@ -58,13 +62,11 @@ class Rule {
      * file
      */
     bool has_updated_dep() const;
-
-    std::string qualifier;
 };
 
 class SingleRule : public Rule {
    public:
-    SingleRule(std::string _name, Value obj);
+    SingleRule(std::string _name, Value obj, Location _loc);
 
     void run(const Config& cfg) const override;
 
@@ -76,7 +78,7 @@ class SingleRule : public Rule {
 
 class MultiRule : public Rule {
    public:
-    MultiRule(std::string _name, Value obj);
+    MultiRule(std::string _name, Value obj, Location _loc);
 
     void run(const Config& cfg) const override;
 
@@ -90,7 +92,7 @@ class MultiRule : public Rule {
 
 class CleanRule : public Rule {
    public:
-    CleanRule(std::string _name, Value obj);
+    CleanRule(std::string _name, Value obj, Location _loc);
 
     void run(const Config& cfg) const override;
 

@@ -50,7 +50,7 @@ std::vector<Lexeme> Lexer::lex() try {
                 break;
             }
             case SINGLE_RULE_NAME_START: {
-                lex_rule_id(lexemes);
+                lex_rule_qualifier(lexemes);
                 break;
             }
             default: {
@@ -104,7 +104,7 @@ void Lexer::consume_line() {
     }
 }
 
-void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
+void Lexer::lex_string(std::vector<Lexeme>& lexemes) try {
     Location opener_loc = loc;
     consume(STRING_QUOTE);
     std::string str_val;
@@ -116,9 +116,11 @@ void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
     }
     consume(STRING_QUOTE);
     lexemes.push_back(make_lexeme(LexemeType::STRING, str_val));
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Lexing string", loc);
 }
 
-void Lexer::lex_rule_id(std::vector<Lexeme>& lexemes) {
+void Lexer::lex_rule_qualifier(std::vector<Lexeme>& lexemes) try {
     Location opener_loc = loc;
     consume(SINGLE_RULE_NAME_START);
     std::string id;
@@ -134,14 +136,18 @@ void Lexer::lex_rule_id(std::vector<Lexeme>& lexemes) {
     }
     consume(SINGLE_RULE_NAME_END);
     lexemes.push_back(make_lexeme(LexemeType::SINGLE_RULE_IDENTIFIER, id));
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Lexing rule qualifier ", loc);
 }
 
-void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {
+void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) try {
     std::string id;
     while (valid_identifier_char(peek())) {
         id += consume();
     }
     lexemes.push_back(make_lexeme(LexemeType::IDENTIFIER, id));
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Lexing identifier ", loc);
 }
 
 Lexeme Lexer::make_lexeme(LexemeType type, std::string val) const { return Lexeme{type, val, loc}; }

@@ -7,8 +7,9 @@
 #include <vector>
 
 #include "dictionaries/rules.hpp"
+#include "errors/error.hpp"
 
-RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) {
+RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) try {
     for (std::unique_ptr<Rule>& rule : rules) {
         std::string name = rule->get_name();
         for (const std::string& dep : rule->get_deps()) {
@@ -16,9 +17,11 @@ RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) {
         }
         name_to_rule[name] = std::move(rule);
     }
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Creating rule graph");
 }
 
-bool RuleGraph::cyclical_dep_exists() const {
+bool RuleGraph::cyclical_dep_exists() const try {
     // Topological sort used for cycle detection
 
     std::unordered_map<std::string, int> indegree;
@@ -54,14 +57,18 @@ bool RuleGraph::cyclical_dep_exists() const {
 
     // If we were not able to reach all rules there was a cycle
     return (reached == num_rules());
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Scanning for cyclical dependency in rules");
 }
 
-const std::vector<std::string>& RuleGraph::dependencies(const std::string& target) const {
+const std::vector<std::string>& RuleGraph::dependencies(const std::string& target) const try {
     auto itm = dep_map.find(target);
     if (itm == dep_map.end()) {
-        throw std::invalid_argument("Cannot find Rule '" + target + "' on rule graph");
+        throw LogicError("Cannot find Rule '" + target + "' on rule graph");
     }
     return itm->second;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Searching for rule dependency");
 }
 
 bool RuleGraph::is_rule(const std::string& rule) const { return name_to_rule.contains(rule); }

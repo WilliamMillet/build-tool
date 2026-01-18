@@ -1,7 +1,6 @@
 #include "variable_evaluator.hpp"
 
 #include <deque>
-#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -9,13 +8,14 @@
 #include "built_in/func_registry.hpp"
 #include "dictionaries/config.hpp"
 #include "dictionaries/rules.hpp"
+#include "errors/error.hpp"
 #include "parsing/parser.hpp"
 #include "value.hpp"
 
 VariableEvaluator::VariableEvaluator(std::vector<ParsedVariable> vars, FuncRegistry _fn_reg)
     : raw_vars(std::move(vars)), fn_reg(_fn_reg) {};
 
-QualifiedDicts VariableEvaluator::evaluate() {
+QualifiedDicts VariableEvaluator::evaluate() try {
     std::unordered_map<std::string, std::vector<std::string>> dep_graph;
     for (const ParsedVariable& v : raw_vars) {
         dep_graph[v.identifier] = aggregate_deps(v);
@@ -32,6 +32,8 @@ QualifiedDicts VariableEvaluator::evaluate() {
     }
 
     return QualifiedDicts{std::move(rules), *cfg};
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Variable evaluation (includes all dictionaries)");
 }
 
 std::vector<std::string> VariableEvaluator::aggregate_deps(const ParsedVariable& var) const {
@@ -57,7 +59,7 @@ std::vector<std::string> VariableEvaluator::aggregate_deps(const ParsedVariable&
 }
 
 void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
-                                           const DepGraph& dep_graph) const {
+                                           const DepGraph& dep_graph) const try {
     std::unordered_map<std::string, ParsedVariable> var_id_map;
     for (ParsedVariable& v : vars) {
         var_id_map[v.identifier] = std::move(v);
@@ -91,8 +93,10 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
     }
 
     if (ordered.size() != dep_graph.size()) {
-        throw std::invalid_argument("Cyclical dependency between variables");
+        throw LogicError("Cyclical dependency between variables detected");
     }
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Determining variable evaluation order");
 }
 
 void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
@@ -102,21 +106,23 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
 
     switch (var.category) {
         case VarCategory::CLEAN: {
-            rules.push_back(std::make_unique<CleanRule>(std::move(var.identifier), std::move(val)));
+            rules.push_back(std::make_unique<CleanRule>(std::move(var.identifier), std::move(val),
+                                                        std::move(var.loc)));
             break;
         }
         case VarCategory::SINGLE_RULE: {
-            rules.push_back(std::make_unique<SingleRule>(std::move(id), std::move(val)));
+            rules.push_back(std::make_unique<SingleRule>(std::move(id), std::move(val), var.loc));
             break;
         }
         case VarCategory::MULTI_RULE: {
-            rules.push_back(std::make_unique<MultiRule>(std::move(id), std::move(val)));
+            rules.push_back(std::make_unique<MultiRule>(std::move(id), std::move(val), var.loc));
             break;
         }
         case VarCategory::CONFIG: {
             if (cfg != nullptr) {
-                throw std::invalid_argument(
-                    "Duplicate <Config> dictionaries detected. Only one configuration may be set");
+                throw SyntaxError(
+                    "Duplicate <Config> dictionaries detected. Only one configuration may be set",
+                    var.loc);
             }
             cfg = std::make_unique<Config>(std::move(id), std::move(val));
             break;
