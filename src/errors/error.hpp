@@ -1,6 +1,5 @@
 #include <exception>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -12,55 +11,81 @@ struct Location {
     size_t line_start() const { return file_idx - col_no; }
 };
 
-enum class ErrorType {
-    UNKNOWN_ERROR,
-    IO_ERROR,
-    // The syntax is malformed and cannot be parsed
-    SYNTAX_ERROR,
-    // The wrong type is given (e.g. List is used over Map)
-    TYPE_ERROR,
-    // The correct type is given, but the value itself is wrong
-    VALUE_ERROR,
-};
-
 class Error : public std::exception {
    public:
-    Error(ErrorType _type, std::string _msg, Location _loc);
+    Error(std::string _msg, Location _loc);
 
-    Error(ErrorType _type, std::string _msg = "");
-
-    void add_ctx(std::string ctx);
+    Error(std::string _msg = "");
 
     void set_loc(Location _loc);
 
+    /** Add additional context as to the events occurring when the error was thrown */
+    void add_ctx(std::string ctx);
+
+    /** Returns true if and only if the location field has been set */
+    bool has_loc() const;
+
+    /**
+     * Return a formatted error including the error type, an excerpt of the file where it occurred
+     * and a trace of the events that occurred when thrown.
+     * @param src_file The file the error occurred in (used to generate excerpt)
+     */
     std::string format(const std::string& src_file) const;
+
+   private:
+    // A stack of events that were occurring when the error was thrown with increased
+    // specificity (e.g. {"Parsing", "Parsing identifier 'name'"})
+    std::vector<std::string> ctx_stack;
+    std::optional<Location> loc;
+    std::string msg;
 
     /** Get a formatted an excerpt from the codebase where the error occurred */
     std::string format_excerpt(const std::string& src_file) const;
 
-   private:
-    std::string msg;
-    ErrorType type;
-    // A stack of processes that were occurring when the error was thrown with increased
-    // specificity (e.g. {"Parsing", "Parsing identifier 'name'"})
-    std::vector<std::string> ctx_stack;
+    virtual std::string err_name() const;
+};
 
-    std::optional<Location> loc;
+/** It is not known why the error occurred */
+class UnknownError : public Error {
+   public:
+    UnknownError(std::string _msg, Location _loc);
+    UnknownError(std::string _msg = "");
 
-    constexpr static std::string err_type_str(ErrorType err_type) {
-        switch (err_type) {
-            case ErrorType::IO_ERROR:
-                return "IoError";
-            case ErrorType::SYNTAX_ERROR:
-                return "SyntaxError";
-            case ErrorType::TYPE_ERROR:
-                return "TypeError";
-            case ErrorType::VALUE_ERROR:
-                return "ValueError";
-            case ErrorType::UNKNOWN_ERROR:
-                return "UnknownError";
-            default:
-                throw std::invalid_argument("Unknown error type");
-        }
-    }
+    std::string err_name() const override;
+};
+
+/** Failed interaction with files */
+class IOError : public Error {
+   public:
+    IOError(std::string _msg, Location _loc);
+    IOError(std::string _msg = "");
+
+    std::string err_name() const override;
+};
+
+/** Parsing failed as the syntax is malformed */
+class SyntaxError : public Error {
+   public:
+    SyntaxError(std::string _msg, Location _loc);
+    SyntaxError(std::string _msg = "");
+
+    std::string err_name() const override;
+};
+
+/** The wrong type is given (e.g. List is used over Map) */
+class TypeError : public Error {
+   public:
+    TypeError(std::string _msg, Location _loc);
+    TypeError(std::string _msg = "");
+
+    std::string err_name() const override;
+};
+
+/** The correct type is given, but the value itself is wrong  */
+class ValueError : public Error {
+   public:
+    ValueError(std::string _msg, Location _loc);
+    ValueError(std::string _msg = "");
+
+    std::string err_name() const override;
 };

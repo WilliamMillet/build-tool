@@ -1,7 +1,6 @@
 #include "lexer.hpp"
 
 #include <cctype>
-#include <stdexcept>
 
 #include "errors/error.hpp"
 #include "file_utils.hpp"
@@ -56,7 +55,7 @@ std::vector<Lexeme> Lexer::lex() try {
             }
             default: {
                 std::string unexpected = {peek()};
-                throw Error(ErrorType::SYNTAX_ERROR, "Unexpected char '" + unexpected + "'");
+                throw SyntaxError("Unexpected char '" + unexpected + "'");
             }
         }
     }
@@ -66,10 +65,12 @@ std::vector<Lexeme> Lexer::lex() try {
     return lexemes;
 } catch (Error& e) {
     e.add_ctx("Lexing process");
-    e.set_loc({line_no, col_no, file_pos});
+    if (!e.has_loc()) {
+        e.set_loc({line_no, col_no, file_pos});
+    }
     throw;
 } catch (std::exception& e) {
-    throw Error(ErrorType::UNKNOWN_ERROR, e.what(), {line_no, col_no, file_pos});
+    throw UnknownError(e.what(), {line_no, col_no, file_pos});
 }
 
 bool Lexer::valid_identifier_char(char c) { return std::isalnum(c) || c == '_'; };
@@ -98,7 +99,7 @@ char Lexer::consume(char exp) {
     } else {
         actl_str += peek();
     }
-    throw_pinpointed_err("Expected character '" + exp_str + "' but got '" + actl_str + "'");
+    throw SyntaxError("Expected character '" + exp_str + "' but got '" + actl_str + "'");
 }
 
 bool Lexer::at_end() const { return file_pos == src.size(); }
@@ -109,44 +110,33 @@ void Lexer::consume_line() {
     }
 }
 
-void Lexer::throw_pinpointed_err(std::string msg) const {
-    if (at_end()) {
-        throw std::invalid_argument("Unexpected end of file: " + msg);
-    } else {
-        std::string lno_str = std::to_string(line_no);
-        std::string cno_str = std::to_string(file_pos);
-        throw std::invalid_argument("Error on line " + lno_str + " at char " + cno_str + ": " +
-                                    msg);
-    }
-}
-
 void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
-    size_t opener_idx = line_no;
+    Location opener_loc{line_no, col_no, file_pos};
     consume(STRING_QUOTE);
     std::string str_val;
     while (!at_end() && peek() != STRING_QUOTE) {
         str_val += consume();
     }
     if (at_end()) {
-        throw_pinpointed_err("Unclosed string at" + std::to_string(opener_idx));
+        throw SyntaxError("Unclosed string detected", opener_loc);
     }
     consume(STRING_QUOTE);
     lexemes.push_back(make_lexeme(LexemeType::STRING, str_val));
 }
 
 void Lexer::lex_rule_id(std::vector<Lexeme>& lexemes) {
-    size_t opener_idx = line_no;
+    Location opener_loc{line_no, col_no, file_pos};
     consume(SINGLE_RULE_NAME_START);
     std::string id;
     while (!at_end() && peek() != SINGLE_RULE_NAME_END) {
         if (!Lexer::valid_identifier_char(peek())) {
             std::string bad_char = {peek()};
-            throw_pinpointed_err("Unexpected character '" + bad_char + "' found in rule");
+            throw SyntaxError("Unexpected character '" + bad_char + "' found in rule");
         }
         id += consume();
     }
     if (at_end()) {
-        throw_pinpointed_err("Unclosed string at" + std::to_string(opener_idx));
+        throw SyntaxError("Unclosed rule identifier found", opener_loc);
     }
     consume(SINGLE_RULE_NAME_END);
     lexemes.push_back(make_lexeme(LexemeType::SINGLE_RULE_IDENTIFIER, id));

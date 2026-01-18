@@ -2,17 +2,18 @@
 
 #include "../file_utils.hpp"
 
-Error::Error(ErrorType _type, std::string _msg, Location _loc)
-    : msg(_msg), type(_type), loc(_loc) {};
+Error::Error(std::string _msg, Location _loc) : loc(_loc), msg(_msg) {};
 
-Error::Error(ErrorType _type, std::string _msg) : msg(_msg), type(_type) {};
-
-void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
+Error::Error(std::string _msg) : msg(_msg) {};
 
 void Error::set_loc(Location _loc) { loc = _loc; };
 
+void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
+
+bool Error::has_loc() const { return loc.has_value(); };
+
 std::string Error::format(const std::string& src_file) const {
-    std::string err = "Exception thrown: " + err_type_str(type);
+    std::string err = "Exception thrown: " + err_name();
     err += "\nMessage: " + msg;
 
     if (loc.has_value()) {
@@ -68,3 +69,23 @@ std::string Error::format_excerpt(const std::string& src_file) const {
 
     return formatted;
 }
+
+UnknownError::UnknownError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+UnknownError::UnknownError(std::string _msg) : Error(_msg) {}
+std::string UnknownError::err_name() const { return "UnknownError"; }
+
+IOError::IOError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+IOError::IOError(std::string _msg) : Error(_msg) {}
+std::string IOError::err_name() const { return "IOError"; }
+
+SyntaxError::SyntaxError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+SyntaxError::SyntaxError(std::string _msg) : Error(_msg) {}
+std::string SyntaxError::err_name() const { return "SyntaxError"; }
+
+TypeError::TypeError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+TypeError::TypeError(std::string _msg) : Error(_msg) {}
+std::string TypeError::err_name() const { return "TypeError"; }
+
+ValueError::ValueError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
+ValueError::ValueError(std::string _msg) : Error(_msg) {}
+std::string ValueError::err_name() const { return "ValueError"; }

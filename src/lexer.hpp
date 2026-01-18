@@ -98,8 +98,6 @@ class Lexer {
     /** Determine if a character can be a valid component of an identifier */
     static bool valid_identifier_char(char c);
 
-    void throw_pinpointed_err [[noreturn]] (std::string msg) const;
-
     void lex_string(std::vector<Lexeme>& lexemes);
 
     void lex_rule_id(std::vector<Lexeme>& lexemes);
