@@ -1,7 +1,5 @@
 #include "error.hpp"
 
-#include <memory>
-
 #include "../file_utils.hpp"
 
 size_t Location::line_start() const { return file_idx - col_no; }
@@ -22,12 +20,6 @@ void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
 
 bool Error::has_loc() const { return loc.has_value(); };
 
-void Error::update(std::string ctx, Location new_loc) {
-    add_ctx(ctx);
-    if (!has_loc()) {
-        loc = new_loc;
-    }
-}
 std::string Error::format(const std::string& src_file) const {
     std::string err = "Exception thrown: " + err_name();
     err += "\nMessage: " + msg;
@@ -91,6 +83,18 @@ std::string Error::format_excerpt(const std::string& src_file) const {
     }
 
     return formatted;
+}
+
+void Error::update_and_throw(std::exception& excep, std::string ctx, Location loc) {
+    if (Error* err = dynamic_cast<Error*>(&excep)) {
+        err->add_ctx(ctx);
+        if (!err->has_loc()) {
+            err->loc = loc;
+        }
+        throw;
+    }
+
+    throw UnknownError(excep, ctx, loc);
 }
 
 UnknownError::UnknownError(std::string _msg, Location _loc) : Error(_msg, _loc) {}

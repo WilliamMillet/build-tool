@@ -71,12 +71,7 @@ class Lexer {
 
     constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile";
     std::string src;
-    // The absolute offset from the start of the stringified file
-    size_t file_pos = 0;
-
-    size_t line_no = 0;
-    // Offset from the start of the current line
-    size_t col_no = 0;
+    Location loc;
 
     std::vector<size_t> line_starts;
 

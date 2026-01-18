@@ -34,15 +34,19 @@ class Error : public std::exception {
     /** Returns true if and only if the location field has been set */
     bool has_loc() const;
 
-    /** Update with new context and set the location if it has not been set */
-    void update(std::string ctx, Location new_loc);
-
     /**
      * Return a formatted error including the error type, an excerpt of the file where it occurred
      * and a trace of the events that occurred when thrown.
      * @param src_file The file the error occurred in (used to generate excerpt)
      */
     std::string format(const std::string& src_file) const;
+
+    /**
+     * If e is an Error, context will be added and the location will be written if not set, then
+     * it will be rethrown
+     * If e is not an Error, it will be converted to one with ctx and loc
+     */
+    [[noreturn]] static void update_and_throw(std::exception& excep, std::string ctx, Location loc);
 
    private:
     // A stack of events that were occurring when the error was thrown with increased

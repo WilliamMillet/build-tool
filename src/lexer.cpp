@@ -9,7 +9,7 @@ Lexer::Lexer(const std::string input) { src = FileUtils::read_all(input); }
 
 std::vector<Lexeme> Lexer::lex() try {
     std::vector<Lexeme> lexemes;
-    line_no = 0, col_no = 0, file_pos = 0;
+    loc = Location{};
 
     while (!at_end()) {
         auto direct_itm = DIRECT_MAPPINGS.find(peek());
@@ -63,27 +63,24 @@ std::vector<Lexeme> Lexer::lex() try {
     lexemes.push_back(make_lexeme(LexemeType::END_OF_FILE));
 
     return lexemes;
-} catch (Error& e) {
-    e.update("Lexing", {line_no, col_no, file_pos});
-    throw;
-} catch (const std::exception& excep) {
-    throw UnknownError(excep, "Lexing", {line_no, col_no, file_pos});
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Lexing", loc);
 }
 
 bool Lexer::valid_identifier_char(char c) { return std::isalnum(c) || c == '_'; };
 
-char Lexer::peek() const { return src.at(file_pos); }
+char Lexer::peek() const { return src.at(loc.file_idx); }
 
 char Lexer::consume() {
-    col_no++;
+    loc.col_no++;
 
     if (peek() == NEWLINE) {
-        line_no++;
-        line_starts.push_back(file_pos + 1);
-        col_no = 0;
+        loc.file_idx++;
+        line_starts.push_back(loc.file_idx + 1);
+        loc.col_no = 0;
     }
 
-    return src.at(file_pos++);
+    return src.at(loc.file_idx++);
 }
 
 char Lexer::consume(char exp) {
@@ -99,7 +96,7 @@ char Lexer::consume(char exp) {
     throw SyntaxError("Expected character '" + exp_str + "' but got '" + actl_str + "'");
 }
 
-bool Lexer::at_end() const { return file_pos == src.size(); }
+bool Lexer::at_end() const { return loc.file_idx == src.size(); }
 
 void Lexer::consume_line() {
     while (peek() != NEWLINE) {
@@ -108,7 +105,7 @@ void Lexer::consume_line() {
 }
 
 void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
-    Location opener_loc{line_no, col_no, file_pos};
+    Location opener_loc = loc;
     consume(STRING_QUOTE);
     std::string str_val;
     while (!at_end() && peek() != STRING_QUOTE) {
@@ -122,7 +119,7 @@ void Lexer::lex_string(std::vector<Lexeme>& lexemes) {
 }
 
 void Lexer::lex_rule_id(std::vector<Lexeme>& lexemes) {
-    Location opener_loc{line_no, col_no, file_pos};
+    Location opener_loc = loc;
     consume(SINGLE_RULE_NAME_START);
     std::string id;
     while (!at_end() && peek() != SINGLE_RULE_NAME_END) {
@@ -147,6 +144,4 @@ void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) {
     lexemes.push_back(make_lexeme(LexemeType::IDENTIFIER, id));
 }
 
-Lexeme Lexer::make_lexeme(LexemeType type, std::string val) const {
-    return Lexeme{type, val, Location{line_no, col_no, file_pos}};
-}
+Lexeme Lexer::make_lexeme(LexemeType type, std::string val) const { return Lexeme{type, val, loc}; }

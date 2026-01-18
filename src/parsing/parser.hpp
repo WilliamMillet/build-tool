@@ -63,11 +63,11 @@ class Parser {
     /** True iff the position is after all lexemes */
     bool at_end() const;
 
+    /** Get the current location or EOF if all lexemes have been parsed */
+    Location get_loc() const;
+
     /** Change the lexeme source the parser reads from and initialise the parse pos to 0 */
     void change_lexeme_source(std::vector<Lexeme>&& new_source);
-
-    /** Throw an error with the line specified at the current lexeme line number */
-    void throw_pinpointed_err [[noreturn]] (std::string msg) const;
 
     /** Assert that the type at the current position in the lexeme stream is in a given list */
     void expect_type(std::vector<LexemeType> type_pool) const;
@@ -79,7 +79,7 @@ class Parser {
     std::vector<Lexeme> consume_var_lexemes();
 
     /** Parse a config object assignment from the opening parenthesis */
-    std::vector<Lexeme> consume_Dictionary_lexemes();
+    std::vector<Lexeme> consume_dictionary_lexemes();
 
     /** Parse one or more terms separated by additive operators */
     std::unique_ptr<Expr> parse_expr();
@@ -91,9 +91,9 @@ class Parser {
     std::unique_ptr<FnExpr> parse_fn_args(std::string fn_name);
 
     /** Parse a Dictionary from the opening brace to and including the closing brace */
-    std::unique_ptr<DictionaryExpr> parse_config_obj();
+    std::unique_ptr<DictionaryExpr> parse_dictionary();
 
-    VarCategory categorise_Dictionary(std::string& id);
+    VarCategory categorise_dictionary(std::string& id);
 };
 
 #endif

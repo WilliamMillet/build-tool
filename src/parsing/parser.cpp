@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 #include "../errors/error.hpp"
@@ -20,9 +19,9 @@ std::vector<ParsedVariable> Parser::parse() try {
             var_lexes.push_back({std::move(id), consume_var_lexemes(), VarCategory::REGULAR});
         } else if (match_type({LexemeType::SINGLE_RULE_IDENTIFIER})) {
             std::string rule_str = consume(LexemeType::SINGLE_RULE_IDENTIFIER).value;
-            VarCategory cat = categorise_Dictionary(rule_str);
+            VarCategory cat = categorise_dictionary(rule_str);
             std::string id = consume(LexemeType::IDENTIFIER).value;
-            var_lexes.push_back({std::move(id), consume_Dictionary_lexemes(), cat});
+            var_lexes.push_back({std::move(id), consume_dictionary_lexemes(), cat});
         } else {
             consume();
         }
@@ -34,16 +33,15 @@ std::vector<ParsedVariable> Parser::parse() try {
         var_exprs.push_back({v.identifier, parse_expr(), v.category});
     }
     return var_exprs;
-} catch (Error& e) {
-    e.update("Lexing", at_end() ? Location::eof_loc() : peek().loc);
-    throw;
-} catch (const std::exception& excep) {
-    throw UnknownError(excep, "Lexing", at_end() ? Location::eof_loc() : peek().loc);
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Lexing", get_loc());
 }
 
 Lexeme Parser::peek() const { return lexemes.at(parse_pos); }
 
 bool Parser::at_end() const { return parse_pos >= lexemes.size(); }
+
+Location Parser::get_loc() const { return at_end() ? Location::eof_loc() : peek().loc; }
 
 Lexeme Parser::consume() {
     parse_pos++;
@@ -60,18 +58,9 @@ void Parser::change_lexeme_source(std::vector<Lexeme>&& new_source) {
     parse_pos = 0;
 }
 
-void Parser::throw_pinpointed_err(std::string msg) const {
-    if (at_end()) {
-        throw std::invalid_argument("Unexpected end of file: " + msg);
-    } else {
-        std::string lno_str = std::to_string(lexemes.at(parse_pos).line_no);
-        throw std::invalid_argument("Error on line " + lno_str + ": " + msg);
-    }
-}
-
 void Parser::expect_type(std::vector<LexemeType> type_pool) const {
     if (!match_type(type_pool)) {
-        throw_pinpointed_err("Unexpected token '" + peek().value);
+        throw SyntaxError("Unexpected token '" + peek().value);
     }
 }
 
@@ -79,7 +68,7 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
     return !at_end() && std::ranges::contains(type_pool, peek().type);
 }
 
-std::vector<Lexeme> Parser::consume_var_lexemes() {
+std::vector<Lexeme> Parser::consume_var_lexemes() try {
     consume(LexemeType::EQUALS);
     expect_type(VARIABLE_STARTS);
     std::vector<Lexeme> assigned_lexemes;
@@ -87,21 +76,22 @@ std::vector<Lexeme> Parser::consume_var_lexemes() {
         assigned_lexemes.push_back(consume());
     }
     return assigned_lexemes;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Consuming variable lexemes", get_loc());
 }
 
-std::vector<Lexeme> Parser::consume_Dictionary_lexemes() {
+std::vector<Lexeme> Parser::consume_dictionary_lexemes() try {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};
-    std::vector<size_t> open_paren_line_nos = {block_start.line_no};
+    std::vector<Location> open_paren_line_nos = {block_start.loc};
 
     while (!open_paren_line_nos.empty() && !at_end()) {
         if (match_type({LexemeType::BLOCK_START})) {
-            open_paren_line_nos.push_back(consume(LexemeType::BLOCK_START).line_no);
+            open_paren_line_nos.push_back(consume(LexemeType::BLOCK_START).loc);
         } else if (match_type({LexemeType::BLOCK_END})) {
             if (open_paren_line_nos.empty()) {
-                throw_pinpointed_err("Closing parenthesis '" + peek().value +
-                                     " ' does not have a corresponding opening parenthesis");
+                throw SyntaxError("Closing parenthesis without opening parenthesis", peek().loc);
             } else {
                 open_paren_line_nos.pop_back();
             }
@@ -111,14 +101,15 @@ std::vector<Lexeme> Parser::consume_Dictionary_lexemes() {
     }
 
     if (at_end() && !open_paren_line_nos.empty()) {
-        const std::string bad_line = std::to_string(open_paren_line_nos.back());
-        throw std::invalid_argument("Unclosed parenthesis on line " + bad_line);
+        throw SyntaxError("Unclosed parenthesis", open_paren_line_nos.back());
     }
 
     return assigned_lexemes;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Consuming variable lexemes", get_loc());
 }
 
-std::unique_ptr<Expr> Parser::parse_expr() {
+std::unique_ptr<Expr> Parser::parse_expr() try {
     std::unique_ptr<Expr> operand1 = parse_term();
     if (!match_type(INFIX_OPERATORS)) {
         return operand1;
@@ -130,19 +121,21 @@ std::unique_ptr<Expr> Parser::parse_expr() {
                                                       parse_expr());
             }
             default: {
-                throw_pinpointed_err("Unexpected token or EOF '" + peek().value);
+                throw SyntaxError("Unexpected operand" + peek().value);
             }
         }
     }
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Parsing expression", get_loc());
 }
 
-std::unique_ptr<Expr> Parser::parse_term() {
+std::unique_ptr<Expr> Parser::parse_term() try {
     switch (peek().type) {
         case LexemeType::STRING: {
             return std::make_unique<StringExpr>(consume(LexemeType::STRING).value);
         }
         case LexemeType::BLOCK_START: {
-            return parse_config_obj();
+            return parse_dictionary();
         }
         case LexemeType::IDENTIFIER: {
             std::string identifier = consume(LexemeType::IDENTIFIER).value;
@@ -161,12 +154,14 @@ std::unique_ptr<Expr> Parser::parse_term() {
             }
         }
         default: {
-            throw_pinpointed_err("Unexpected token '" + peek().value);
+            throw SyntaxError("Unexpected token '" + peek().value);
         }
     }
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Parsing term", get_loc());
 }
 
-std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) {
+std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) try {
     std::unique_ptr<FnExpr> fn_expr = std::make_unique<FnExpr>(fn_name);
     consume(LexemeType::MACRO_FN_START);
     fn_expr->args.push_back(parse_expr());
@@ -178,9 +173,11 @@ std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) {
     consume(LexemeType::MACRO_FN_END);
 
     return fn_expr;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Parsing function arguments", get_loc());
 }
 
-std::unique_ptr<DictionaryExpr> Parser::parse_config_obj() {
+std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
     std::unique_ptr<DictionaryExpr> cfg_expr = std::make_unique<DictionaryExpr>();
     while (!at_end() && !match_type({LexemeType::BLOCK_END})) {
         std::string id = consume(LexemeType::IDENTIFIER).value;
@@ -189,15 +186,17 @@ std::unique_ptr<DictionaryExpr> Parser::parse_config_obj() {
         consume(LexemeType::DELIMETER);
     }
     if (at_end()) {
-        throw_pinpointed_err("Failed to parse Dictionary");
+        throw SyntaxError("Failed to parse dictionary");
     }
 
     consume(LexemeType::BLOCK_END);
 
     return cfg_expr;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Parsing dictionary", get_loc());
 }
 
-VarCategory Parser::categorise_Dictionary(std::string& id) {
+VarCategory Parser::categorise_dictionary(std::string& id) {
     if (id == "Rule") {
         return VarCategory::SINGLE_RULE;
     }
@@ -211,5 +210,5 @@ VarCategory Parser::categorise_Dictionary(std::string& id) {
         return VarCategory::CONFIG;
     }
 
-    throw_pinpointed_err("Invalid rule type");
+    throw SyntaxError("Invalid rule type '" + id + "'");
 }
