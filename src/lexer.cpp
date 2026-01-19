@@ -78,7 +78,7 @@ char Lexer::consume() {
 
     if (peek() == NEWLINE) {
         loc.line_no++;
-        loc.col_no = 0;
+        loc.col_no = 1;
     }
 
     return src.at(loc.file_idx++);
