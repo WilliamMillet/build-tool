@@ -3,8 +3,8 @@ A custom build tool for C/C++. Contains a custom configuration DSL + a lexer, pa
 
 ## Language and Syntax Guide
 An example configuration file, in full, may look as follows:
-<!-- Note that TOML is not related to the project. It is happens to highlight the syntax well  -->
-```toml
+<!-- Note that ruby is not related to the project. It is happens to highlight the syntax well  -->
+```ru
 <Config> cfg {
     compiler = "clang++"
     compilation_flags = ["-g", "-Wall"]
@@ -39,7 +39,7 @@ Build files are made up of various variables, stored at identifiers. These ident
 Dictionaries will be explained later.
 
 Variables are *immutable* and cannot be redefined. Additionally, they may be defined in order, as there evaluation order will be determined by the tool. However, any cyclical dependencies between variables will result in an error:
-```toml
+```ru
 # Valid
 a = b + "Bar"
 b = "Foo"
@@ -51,19 +51,19 @@ b = a + "Foo
 The following fundamental data types exist:
 ### String
 A sequence of UTF-8 characters. One way to construct this is via a quotation enclosed string literal. Addition is defined on strings as a concatenation operation.
-```toml
+```ru
 my_string = "Hello World"
 ```
 ### Enum
 Enums in this language are similar to scoped enums in C++. You provide a scope and a name
-```toml
+```ru
 my_enum = Step::COMPILE
 ```
 The current enums that exist are:
 - **Step**: (COMPILE, LINK)
 ### List
 An sequence of data types. This can be homogenous or heterogeneous, although there are currently no uses for heterogeneous lists. Addition is defined on lists as a concatenation operation. Lists can be nested within each other freely:
-```toml
+```ru
 my_list = [[[[[]]]], ["My list", []]]
 ```
 ### Dictionary
@@ -79,7 +79,7 @@ A dictionary is a map between identifiers and variables.
 > Note that non-newline whitespace is removed during the lexing stage, so it does not matter if you prefix your identifiers with whitespace, or how much you do.
 
 You can include as many (including 0) values as you like in the dictionary. A dictionary may be *qualified* by including an arrow enclosed qualifier
-```toml
+```ru
 <MultiRule> compilation {
     deps = cpp_files
     output = cpp_names
@@ -106,7 +106,7 @@ The config qualifier allows you tp specify information about your project which 
 
 ### `<Rule>`
 A Rule is a structure that represents a single build command. The name of the output will be the name of the rule. In the example case below, this would be `app`:
-```toml
+```ru
 <Rule> app {
     deps = cpp_names
     step = Step::LINK
@@ -127,7 +127,7 @@ MultiRule Fields:
 | **step** | Step (Enum) | No | The build step this represents. |
 ### `<Clean>`
 A special type of rule that allows for the removal of files.
-```toml
+```ru
 <Clean> clean {
     remove = ["a", "b", "c"]
 }
@@ -153,7 +153,7 @@ This tool was designed to provide clear, human-readable and locatable errors upo
 - Context about the events occurring at the time of the error
 
 An example error in this format is:
-```toml
+```ru
 Exception thrown: SyntaxError
 Message: Unexpected char '@'
 Location: test_data/Buildfile:0:22:
