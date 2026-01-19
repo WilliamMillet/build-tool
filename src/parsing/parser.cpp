@@ -18,8 +18,8 @@ std::vector<ParsedVariable> Parser::parse() try {
             consume(LexemeType::EQUALS);
             var_lexes.push_back(
                 {std::move(id_lex.value), consume_var_lexemes(), VarCategory::REGULAR, id_lex.loc});
-        } else if (match_type({LexemeType::SINGLE_RULE_IDENTIFIER})) {
-            Lexeme rule_lex = consume(LexemeType::SINGLE_RULE_IDENTIFIER);
+        } else if (match_type({LexemeType::DICT_QUALIFIER})) {
+            Lexeme rule_lex = consume(LexemeType::DICT_QUALIFIER);
             VarCategory cat = categorise_dictionary(rule_lex.value);
             std::string id = consume(LexemeType::IDENTIFIER).value;
             var_lexes.push_back({std::move(id), consume_dict_lexemes(), cat, rule_lex.loc});
@@ -84,29 +84,29 @@ std::vector<Lexeme> Parser::consume_dict_lexemes() try {
     const Lexeme block_start = consume(LexemeType::BLOCK_START);
 
     std::vector<Lexeme> assigned_lexemes = {block_start};
-    std::vector<Location> open_paren_line_nos = {block_start.loc};
+    std::vector<Location> open_paren_locs = {block_start.loc};
 
-    while (!open_paren_line_nos.empty() && !at_end()) {
+    while (!open_paren_locs.empty() && !at_end()) {
         if (match_type({LexemeType::BLOCK_START})) {
-            open_paren_line_nos.push_back(consume(LexemeType::BLOCK_START).loc);
+            open_paren_locs.push_back(consume(LexemeType::BLOCK_START).loc);
         } else if (match_type({LexemeType::BLOCK_END})) {
-            if (open_paren_line_nos.empty()) {
+            if (open_paren_locs.empty()) {
                 throw SyntaxError("Closing parenthesis without opening parenthesis", peek().loc);
             } else {
-                open_paren_line_nos.pop_back();
+                open_paren_locs.pop_back();
             }
         }
 
         assigned_lexemes.push_back(consume());
     }
 
-    if (at_end() && !open_paren_line_nos.empty()) {
-        throw SyntaxError("Unclosed parenthesis", open_paren_line_nos.back());
+    if (at_end() && !open_paren_locs.empty()) {
+        throw SyntaxError("Unclosed parenthesis", open_paren_locs.back());
     }
 
     return assigned_lexemes;
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Consuming variable lexemes", get_loc());
+    Error::update_and_throw(excep, "Consuming dictionary lexemes", get_loc());
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() try {
@@ -183,7 +183,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
         std::string id = consume(LexemeType::IDENTIFIER).value;
         consume(LexemeType::EQUALS);
         cfg_expr->fields_map[id] = parse_expr();
-        consume(LexemeType::DELIMETER);
+        consume(LexemeType::NEWLINE);
     }
     if (at_end()) {
         throw SyntaxError("Failed to parse dictionary");

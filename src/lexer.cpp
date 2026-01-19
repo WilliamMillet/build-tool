@@ -9,17 +9,18 @@ Lexer::Lexer(const std::string input) { src = FileUtils::read_all(input); }
 
 std::vector<Lexeme> Lexer::lex() try {
     std::vector<Lexeme> lexemes;
-    loc = Location{};
+    loc = Location{.line_no = 1, .col_no = 1, .file_idx = 0};
 
     while (!at_end()) {
         auto direct_itm = DIRECT_MAPPINGS.find(peek());
         if (direct_itm != DIRECT_MAPPINGS.end()) {
+            Location lex_loc = loc;
             std::string lex_val{consume()};
-            lexemes.push_back(make_lexeme(direct_itm->second, lex_val));
+            lexemes.push_back({direct_itm->second, lex_val, lex_loc});
             continue;
         }
 
-        if (std::isspace(peek())) {
+        if (std::isspace(peek()) && peek() != '\n') {
             consume();
             continue;
         }
@@ -31,7 +32,7 @@ std::vector<Lexeme> Lexer::lex() try {
 
         switch (peek()) {
             case NEWLINE: {
-                lexemes.push_back(make_lexeme(LexemeType::NEWLINE));
+                lexemes.push_back({LexemeType::NEWLINE, "\n", loc});
                 consume();
                 break;
             }
@@ -40,9 +41,10 @@ std::vector<Lexeme> Lexer::lex() try {
                 break;
             }
             case SCOPE_RESOLVER: {
+                Location lex_loc = loc;
                 consume(SCOPE_RESOLVER);
                 consume(SCOPE_RESOLVER);
-                lexemes.push_back(make_lexeme(LexemeType::SCOPE_RESOLVER));
+                lexemes.push_back({LexemeType::SCOPE_RESOLVER, "::", lex_loc});
                 break;
             }
             case STRING_QUOTE: {
@@ -75,8 +77,7 @@ char Lexer::consume() {
     loc.col_no++;
 
     if (peek() == NEWLINE) {
-        loc.file_idx++;
-        line_starts.push_back(loc.file_idx + 1);
+        loc.line_no++;
         loc.col_no = 0;
     }
 
@@ -115,7 +116,7 @@ void Lexer::lex_string(std::vector<Lexeme>& lexemes) try {
         throw SyntaxError("Unclosed string detected", opener_loc);
     }
     consume(STRING_QUOTE);
-    lexemes.push_back(make_lexeme(LexemeType::STRING, str_val));
+    lexemes.push_back({LexemeType::STRING, str_val, opener_loc});
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Lexing string", loc);
 }
@@ -135,17 +136,19 @@ void Lexer::lex_rule_qualifier(std::vector<Lexeme>& lexemes) try {
         throw SyntaxError("Unclosed rule identifier found", opener_loc);
     }
     consume(SINGLE_RULE_NAME_END);
-    lexemes.push_back(make_lexeme(LexemeType::SINGLE_RULE_IDENTIFIER, id));
+    lexemes.push_back({LexemeType::DICT_QUALIFIER, id, opener_loc});
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Lexing rule qualifier ", loc);
 }
 
 void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) try {
+    Location start_loc = loc;
+
     std::string id;
     while (valid_identifier_char(peek())) {
         id += consume();
     }
-    lexemes.push_back(make_lexeme(LexemeType::IDENTIFIER, id));
+    lexemes.push_back({LexemeType::IDENTIFIER, id, start_loc});
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Lexing identifier ", loc);
 }

@@ -23,7 +23,7 @@ void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
 bool Error::has_loc() const { return loc.has_value(); };
 
 std::string Error::format(const std::string& src_file) const {
-    std::string err = "Exception thrown: " + err_name();
+    std::string err = "Error raised: " + err_name();
     err += "\nMessage: " + msg;
 
     if (loc.has_value()) {
@@ -49,6 +49,7 @@ std::string Error::format_excerpt(const std::string& src_file) const {
         chunk = FileUtils::read_chunk(src_file, loc->line_start());
     } catch (const std::exception& e) {
         std::string err_msg = "Failed to read code excerpt";
+        err_msg += '\n';
         err_msg += e.what();
         return err_msg;
     }
@@ -108,6 +109,8 @@ void Error::update_and_throw(std::exception& excep, std::string ctx) {
     throw UnknownError(excep, ctx);
 }
 
+std::string Error::err_name() const { return "Error"; }
+
 UnknownError::UnknownError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 UnknownError::UnknownError(std::string _msg) : Error(_msg) {}
 std::string UnknownError::err_name() const { return "UnknownError"; }
@@ -146,4 +149,4 @@ SystemError::SystemError(std::string _msg, Location _loc)
     : Error(std::string(std::strerror(errno)) + "." + _msg, _loc) {}
 SystemError::SystemError(std::string _msg)
     : Error(std::string(std::strerror(errno)) + "." + _msg) {}
-std::string SystemError::err_name() const { return "LogicError"; }
+std::string SystemError::err_name() const { return "SystemError"; }

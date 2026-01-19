@@ -1,12 +1,9 @@
-cmake_minimum_required(VERSION  3.20)
+cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-project(builder LANGUAGES CXX)
+project(MyMake LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
-
-set(CMAKE_CXX_MODULE_STD ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_options(
     -g
@@ -19,6 +16,31 @@ add_compile_options(
 
 add_link_options(-fsanitize=address,undefined)
 
-file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
+# ======================
+# Application
+# ======================
 
-add_executable(my_make ${ALL_SOURCES})
+file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+
+add_executable(my_make ${APP_SOURCES})
+
+target_include_directories(my_make PRIVATE include)
+
+# ======================
+# Tests
+# ======================
+
+file(GLOB_RECURSE  TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
+
+# Remove main.cpp from app sources for tests
+list(REMOVE_ITEM APP_SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
+
+add_executable(my_make_tests
+    ${TEST_SOURCES}
+    ${APP_SOURCES}
+)
+
+target_include_directories(my_make_tests PRIVATE
+    include
+    ${CMAKE_SOURCE_DIR}
+)

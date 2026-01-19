@@ -4,6 +4,7 @@
 #include <exception>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,14 @@ struct Location {
     size_t line_start() const;
 
     bool is_eof() const;
+
+    bool operator==(const Location&) const = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const Location& loc) {
+        os << "Location{line_no = " << loc.line_no << ", col_no = " << loc.col_no
+           << ", file_idx = " << loc.file_idx << "}";
+        return os;
+    }
 
     static Location eof_loc();
 };

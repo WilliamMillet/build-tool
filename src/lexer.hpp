@@ -9,7 +9,7 @@
 
 enum class LexemeType {
     IDENTIFIER,
-    SINGLE_RULE_IDENTIFIER,
+    DICT_QUALIFIER,
     ADD,
     EQUALS,
     LINE_START,
@@ -71,9 +71,7 @@ class Lexer {
 
     constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile";
     std::string src;
-    Location loc;
-
-    std::vector<size_t> line_starts;
+    Location loc{.line_no = 1, .col_no = 1, .file_idx = 0};
 
     /** Returns the next character in the src */
     char peek() const;

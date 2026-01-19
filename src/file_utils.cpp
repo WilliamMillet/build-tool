@@ -17,7 +17,7 @@ std::vector<std::string> FileUtils::read_chunk(std::string path, size_t start_po
     if (start_pos >= fs::file_size(path)) {
         throw std::invalid_argument("Cannot read from position " + std::to_string(start_pos) +
                                     " (0 indexed) as file is only " +
-                                    std::to_string(fs::file_size(path)) + "bytes long");
+                                    std::to_string(fs::file_size(path)) + " bytes long");
     }
 
     file.seekg(start_pos);
