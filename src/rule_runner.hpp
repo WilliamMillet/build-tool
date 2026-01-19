@@ -1,7 +1,11 @@
 #ifndef RULE_RUNNER_H
 #define RULE_RUNNER_H
 
+#include <unordered_set>
+
 #include "rule_graph.hpp"
+
+using Visited = std::unordered_set<std::string>;
 
 class RuleRunner {
    public:
@@ -13,6 +17,9 @@ class RuleRunner {
    private:
     RuleGraph graph;
     Config cfg;
+
+    /** Recursive helper for run_rule */
+    void run_rule_recurse(const std::string& rule_name, Visited& visited) const;
 };
 
 #endif
