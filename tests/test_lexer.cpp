@@ -48,7 +48,7 @@ std::vector<Lexeme> simple_var_exp = {
     // Line 4: 'EOF'
     {LexemeType::END_OF_FILE, "", {4, 1, 76}}};
 
-TEST_CASE("Test simple variables", "[lexer]") {
+TEST_CASE("Lex simple variables", "[lexer]") {
     Lexer lexer(get_path("SimpleVariables.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
 
@@ -138,7 +138,7 @@ std::vector<Lexeme> complex_cfg_exp = {
     {LexemeType::BLOCK_END, "}", {12, 1, 262}},
     {LexemeType::END_OF_FILE, "", {12, 2, 263}}};
 
-TEST_CASE("Test simple dictionaries", "[lexer]") {
+TEST_CASE("Lex simple dictionaries", "[lexer]") {
     Lexer lexer(get_path("SimpleDicts.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
 
@@ -146,6 +146,102 @@ TEST_CASE("Test simple dictionaries", "[lexer]") {
 
     for (size_t i = 0; i < complex_cfg_exp.size(); i++) {
         const Lexeme& exp = complex_cfg_exp.at(i);
+        const Lexeme& got = lexemes.at(i);
+
+        INFO("Comparing '" + got.value + "' with '" + exp.value + "'");
+        INFO("Lexeme index: " + std::to_string(i));
+
+        REQUIRE(got.type == exp.type);
+        REQUIRE(got.loc == exp.loc);
+        REQUIRE(got.value == exp.value);
+    }
+}
+
+std::vector<Lexeme> strange_data_exp = {
+    // Line 1: # Syntax will not work but should be lexed correctly (52 chars + \n)
+    {LexemeType::NEWLINE, "\n", {1, 53, 52}},
+
+    // Line 2: cpp_files = files(src_dir) (26 chars + \n)
+    {LexemeType::IDENTIFIER, "cpp_files", {2, 1, 53}},
+    {LexemeType::EQUALS, "=", {2, 11, 63}},
+    {LexemeType::IDENTIFIER, "files", {2, 13, 65}},
+    {LexemeType::MACRO_FN_START, "(", {2, 18, 70}},
+    {LexemeType::IDENTIFIER, "src_dir", {2, 19, 71}},
+    {LexemeType::MACRO_FN_END, ")", {2, 26, 78}},
+    {LexemeType::NEWLINE, "\n", {2, 27, 79}},
+
+    // Line 3: <Clean> clean { (15 chars + \n)
+    {LexemeType::DICT_QUALIFIER, "Clean", {3, 1, 80}},
+    {LexemeType::IDENTIFIER, "clean", {3, 9, 88}},
+    {LexemeType::BLOCK_START, "{", {3, 15, 94}},
+    {LexemeType::NEWLINE, "\n", {3, 16, 95}},
+
+    // Line 4:     remove = ["app", ["nested", [[[]]]], ] + file_names(cpp_files) (66 chars + \n)
+    {LexemeType::IDENTIFIER, "remove", {4, 5, 100}},
+    {LexemeType::EQUALS, "=", {4, 12, 107}},
+    {LexemeType::LIST_START, "[", {4, 14, 109}},
+    {LexemeType::STRING, "app", {4, 15, 110}},
+    {LexemeType::DELIMETER, ",", {4, 20, 115}},
+    {LexemeType::LIST_START, "[", {4, 22, 117}},
+    {LexemeType::STRING, "nested", {4, 23, 118}},
+    {LexemeType::DELIMETER, ",", {4, 31, 126}},
+    {LexemeType::LIST_START, "[", {4, 33, 128}},
+    {LexemeType::LIST_START, "[", {4, 34, 129}},
+    {LexemeType::LIST_START, "[", {4, 35, 130}},
+    {LexemeType::LIST_END, "]", {4, 36, 131}},
+    {LexemeType::LIST_END, "]", {4, 37, 132}},
+    {LexemeType::LIST_END, "]", {4, 38, 133}},
+    {LexemeType::LIST_END, "]", {4, 39, 134}},
+    {LexemeType::DELIMETER, ",", {4, 40, 135}},
+    {LexemeType::LIST_END, "]", {4, 42, 137}},
+    {LexemeType::ADD, "+", {4, 44, 139}},
+    {LexemeType::IDENTIFIER, "file_names", {4, 46, 141}},
+    {LexemeType::MACRO_FN_START, "(", {4, 56, 151}},
+    {LexemeType::IDENTIFIER, "cpp_files", {4, 57, 152}},
+    {LexemeType::MACRO_FN_END, ")", {4, 66, 161}},
+    {LexemeType::NEWLINE, "\n", {4, 67, 162}},
+
+    // Line 5:     { (4 spaces + { + \n)
+    {LexemeType::BLOCK_START, "{", {5, 5, 167}},
+    {LexemeType::NEWLINE, "\n", {5, 6, 168}},
+
+    // Line 6:         { (8 spaces + { + \n)
+    {LexemeType::BLOCK_START, "{", {6, 9, 177}},
+    {LexemeType::NEWLINE, "\n", {6, 10, 178}},
+
+    // Line 7:             { (12 spaces + { + \n)
+    {LexemeType::BLOCK_START, "{", {7, 13, 191}},
+    {LexemeType::NEWLINE, "\n", {7, 14, 192}},
+
+    // Line 8:                 {} (16 spaces + { + } + \n)
+    {LexemeType::BLOCK_START, "{", {8, 17, 209}},
+    {LexemeType::BLOCK_END, "}", {8, 18, 210}},
+    {LexemeType::NEWLINE, "\n", {8, 19, 211}},
+
+    // Line 9:             } (12 spaces + } + \n)
+    {LexemeType::BLOCK_END, "}", {9, 13, 224}},
+    {LexemeType::NEWLINE, "\n", {9, 14, 225}},
+
+    // Line 10:        } (8 spaces + } + \n)
+    {LexemeType::BLOCK_END, "}", {10, 9, 234}},
+    {LexemeType::NEWLINE, "\n", {10, 10, 235}},
+
+    // Line 11:    } (4 spaces + } + \n)
+    {LexemeType::BLOCK_END, "}", {11, 5, 240}},
+    {LexemeType::NEWLINE, "\n", {11, 6, 241}},
+
+    // Line 12: } (0 spaces + } + EOF)
+    {LexemeType::BLOCK_END, "}", {12, 1, 242}},
+    {LexemeType::END_OF_FILE, "", {12, 2, 243}}};
+
+TEST_CASE("Lex strange data", "[lexer]") {
+    Lexer lexer(get_path("LexingEdgeCases.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    REQUIRE(lexemes.size() == strange_data_exp.size());
+
+    for (size_t i = 0; i < strange_data_exp.size(); i++) {
+        const Lexeme& exp = strange_data_exp.at(i);
         const Lexeme& got = lexemes.at(i);
 
         INFO("Comparing '" + got.value + "' with '" + exp.value + "'");
