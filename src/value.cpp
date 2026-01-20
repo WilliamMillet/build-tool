@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "errors/error.hpp"
+
 ValueList::ValueList(std::vector<std::unique_ptr<Value>> elems) : elements(std::move(elems)) {};
 
 ValueList::ValueList(const ValueList& other) {
@@ -45,13 +47,13 @@ void Dictionary::assert_contains(const std::vector<std::pair<std::string, ValueT
     for (const auto& [field, field_type] : shape) {
         auto itm = fields.find(field);
         if (itm == fields.end()) {
-            throw std::invalid_argument("Dictionary missing expected field '" + field + "'");
+            throw ValueError("Dictionary missing expected field '" + field + "'");
         }
+
         try {
             itm->second.assert_type(field_type);
         } catch (const std::invalid_argument& err) {
-            throw std::invalid_argument("Failed to parse dictionary field '" + field +
-                                        "': " + err.what());
+            throw ValueError("Failed to parse dictionary field '" + field + "': " + err.what());
         }
     }
 }
@@ -74,8 +76,8 @@ Value& Value::operator+=(const Value& other) {
     if (other.type != type) {
         const std::string type_a = type_string_map.at(type);
         const std::string type_b = type_string_map.at(type);
-        throw std::invalid_argument("Cannot add two values of distinct types ('" + type_a +
-                                    "' + '" + type_b + "')");
+        throw TypeError("Cannot add two values of distinct types ('" + type_a + "' + '" + type_b +
+                        "')");
     }
 
     switch (type) {
@@ -93,7 +95,7 @@ Value& Value::operator+=(const Value& other) {
         }
         default: {
             std::string type_name = type_string_map.at(type);
-            throw std::invalid_argument("Type '" + type_name + "' does not support addition");
+            throw TypeError("Type '" + type_name + "' does not support addition");
         }
     }
 
@@ -102,8 +104,8 @@ Value& Value::operator+=(const Value& other) {
 
 void Value::assert_type(ValueType exp) const {
     if (type != exp) {
-        throw std::invalid_argument("Expected type '" + type_string_map.at(exp) +
-                                    "' but got type '" + type_string_map.at(exp) + "'");
+        throw TypeError("Expected type '" + type_string_map.at(exp) + "' but got type '" +
+                        type_string_map.at(exp) + "'");
     }
 }
 
