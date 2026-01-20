@@ -105,7 +105,7 @@ Value& Value::operator+=(const Value& other) {
 void Value::assert_type(ValueType exp) const {
     if (type != exp) {
         throw TypeError("Expected type '" + type_string_map.at(exp) + "' but got type '" +
-                        type_string_map.at(exp) + "'");
+                        type_string_map.at(type) + "'");
     }
 }
 

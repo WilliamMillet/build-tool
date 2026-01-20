@@ -81,6 +81,8 @@ Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
 
 ListExpr::ListExpr() {};
 
+ListExpr::ListExpr(std::vector<std::unique_ptr<Expr>> elems) : elements(std::move(elems)) {}
+
 std::vector<Expr*> ListExpr::get_children() const {
     std::vector<Expr*> res;
 

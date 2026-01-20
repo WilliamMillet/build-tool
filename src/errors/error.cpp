@@ -12,9 +12,9 @@ bool Location::is_eof() const {
 
 Location Location::eof_loc() { return Location{END_OF_FILE, END_OF_FILE, END_OF_FILE}; }
 
-Error::Error(std::string _msg, Location _loc) : loc(_loc), msg(_msg) {};
+Error::Error(std::string _msg, Location _loc) : loc(_loc), msg(_msg), what_str(format()) {};
 
-Error::Error(std::string _msg) : msg(_msg) {};
+Error::Error(std::string _msg) : msg(_msg), what_str(format()) {};
 
 const char* Error::what() const noexcept { return what_str.data(); };
 
@@ -133,8 +133,9 @@ void Error::update_and_throw(std::exception& excep, std::string ctx) {
         err->set_what_str(err->format());
         throw;
     } else {
-        err->set_what_str(excep.what());
-        throw UnknownError(excep, ctx);
+        UnknownError unknown_err{excep, ctx};
+        unknown_err.set_what_str(excep.what());
+        throw unknown_err;
     }
 }
 

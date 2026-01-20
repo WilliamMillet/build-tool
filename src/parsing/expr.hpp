@@ -89,6 +89,7 @@ class ListExpr : public Expr {
     std::vector<std::unique_ptr<Expr>> elements;
 
     ListExpr();
+    ListExpr(std::vector<std::unique_ptr<Expr>> elems);
 
     std::vector<Expr*> get_children() const override;
 

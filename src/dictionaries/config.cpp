@@ -1,7 +1,5 @@
 #include "config.hpp"
 
-#include <functional>
-
 Config::Config(std::string _name, Value cfg_val) : name(_name) {
     cfg_val.assert_type(ValueType::Dictionary);
     Dictionary dict = cfg_val.get<Dictionary>();
