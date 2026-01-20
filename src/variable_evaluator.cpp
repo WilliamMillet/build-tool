@@ -1,7 +1,6 @@
 #include "variable_evaluator.hpp"
 
 #include <deque>
-#include <iostream>
 #include <ranges>
 #include <string>
 #include <unordered_map>
@@ -18,7 +17,6 @@ VariableEvaluator::VariableEvaluator(std::vector<ParsedVariable> vars, FuncRegis
     : raw_vars(std::move(vars)), fn_reg(_fn_reg) {};
 
 QualifiedDicts VariableEvaluator::evaluate() try {
-    std::cout << "\n\n" << std::endl;
     std::unordered_map<std::string, std::vector<std::string>> dep_graph;
     for (const ParsedVariable& v : raw_vars) {
         dep_graph[v.identifier] = aggregate_deps(v);
@@ -112,7 +110,6 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
 
     vars.clear();
     for (const std::string& id : std::views::reverse(ordered)) {
-        std::cout << id << std::endl;
         vars.push_back(std::move(var_id_map.at(id)));
     }
 } catch (std::exception& excep) {
