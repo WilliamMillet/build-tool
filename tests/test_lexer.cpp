@@ -5,7 +5,7 @@
 #include "../src/lexer.hpp"
 #include "src/errors/error.hpp"
 
-inline constexpr std::string TEST_DATA_DIR = "../tests/data";
+inline const std::string TEST_DATA_DIR = "../tests/data/files";
 
 std::filesystem::path get_path(std::string file) {
     return std::filesystem::path(TEST_DATA_DIR + "/" + file);
@@ -165,9 +165,9 @@ std::vector<Lexeme> strange_data_exp = {
     {LexemeType::IDENTIFIER, "cpp_files", {2, 1, 53}},
     {LexemeType::EQUALS, "=", {2, 11, 63}},
     {LexemeType::IDENTIFIER, "files", {2, 13, 65}},
-    {LexemeType::MACRO_FN_START, "(", {2, 18, 70}},
+    {LexemeType::FN_START, "(", {2, 18, 70}},
     {LexemeType::IDENTIFIER, "src_dir", {2, 19, 71}},
-    {LexemeType::MACRO_FN_END, ")", {2, 26, 78}},
+    {LexemeType::FN_END, ")", {2, 26, 78}},
     {LexemeType::NEWLINE, "\n", {2, 27, 79}},
 
     // Line 3: <Clean> clean { (15 chars + \n)
@@ -196,9 +196,9 @@ std::vector<Lexeme> strange_data_exp = {
     {LexemeType::LIST_END, "]", {4, 42, 137}},
     {LexemeType::ADD, "+", {4, 44, 139}},
     {LexemeType::IDENTIFIER, "file_names", {4, 46, 141}},
-    {LexemeType::MACRO_FN_START, "(", {4, 56, 151}},
+    {LexemeType::FN_START, "(", {4, 56, 151}},
     {LexemeType::IDENTIFIER, "cpp_files", {4, 57, 152}},
-    {LexemeType::MACRO_FN_END, ")", {4, 66, 161}},
+    {LexemeType::FN_END, ")", {4, 66, 161}},
     {LexemeType::NEWLINE, "\n", {4, 67, 162}},
 
     // Line 5:     { (4 spaces + { + \n)
