@@ -44,9 +44,6 @@ class Parser {
     std::vector<Lexeme> lexemes;
     size_t parse_pos = 0;
 
-    inline const static std::vector<LexemeType> VALID_IDENTIFIER_SUCCESSORS = {
-        LexemeType::EQUALS, LexemeType::BLOCK_START};
-
     inline const static std::vector<LexemeType> VARIABLE_STARTS = {
         LexemeType::IDENTIFIER, LexemeType::LIST_START, LexemeType::FN_START, LexemeType::STRING,
         LexemeType::BLOCK_START};
@@ -98,6 +95,7 @@ class Parser {
     /** Parse a Dictionary from the opening brace to and including the closing brace */
     std::unique_ptr<DictionaryExpr> parse_dictionary();
 
+    /** Determine the category of a dictionary from it's qualifier id */
     VarCategory categorise_dictionary(std::string& id);
 };
 

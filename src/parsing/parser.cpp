@@ -233,16 +233,13 @@ std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
 VarCategory Parser::categorise_dictionary(std::string& id) {
     if (id == "Rule") {
         return VarCategory::SINGLE_RULE;
-    }
-    if (id == "MultiRule") {
+    } else if (id == "MultiRule") {
         return VarCategory::MULTI_RULE;
-    }
-    if (id == "Clean") {
+    } else if (id == "Clean") {
         return VarCategory::CLEAN;
-    }
-    if (id == "Config") {
+    } else if (id == "Config") {
         return VarCategory::CONFIG;
+    } else {
+        throw SyntaxError("Invalid rule type '" + id + "'");
     }
-
-    throw SyntaxError("Invalid rule type '" + id + "'");
 }
