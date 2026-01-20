@@ -48,8 +48,8 @@ class Parser {
         LexemeType::EQUALS, LexemeType::BLOCK_START};
 
     inline const static std::vector<LexemeType> VARIABLE_STARTS = {
-        LexemeType::IDENTIFIER, LexemeType::LIST_START, LexemeType::MACRO_FN_START,
-        LexemeType::STRING};
+        LexemeType::IDENTIFIER, LexemeType::LIST_START, LexemeType::FN_START, LexemeType::STRING,
+        LexemeType::BLOCK_START};
 
     inline const static std::vector<LexemeType> INFIX_OPERATORS = {LexemeType::ADD};
 
@@ -90,7 +90,10 @@ class Parser {
     std::unique_ptr<Expr> parse_term();
 
     /** Parse the arguments of a function from the opening to closing parenthesis */
-    std::unique_ptr<FnExpr> parse_fn_args(std::string fn_name);
+    std::unique_ptr<FnExpr> parse_fn(std::string fn_name);
+
+    /** Parse a list from the opening to closing parenthesis */
+    std::unique_ptr<ListExpr> parse_list();
 
     /** Parse a Dictionary from the opening brace to and including the closing brace */
     std::unique_ptr<DictionaryExpr> parse_dictionary();

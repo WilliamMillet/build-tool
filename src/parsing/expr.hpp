@@ -11,6 +11,8 @@
 
 enum class BinaryOpType { ADD };
 
+// TODO - Maybe refactor this with public private
+
 using VarMap = std::unordered_map<std::string, Value>;
 
 class Expr {
@@ -30,46 +32,44 @@ class BinaryOpExpr : public Expr {
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
 
+    BinaryOpExpr(BinaryOpType _type, std::unique_ptr<Expr> _left, std::unique_ptr<Expr> _right);
+
     std::vector<Expr*> get_children() const override;
 
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
-
-    BinaryOpExpr(BinaryOpType _type, std::unique_ptr<Expr> _left, std::unique_ptr<Expr> _right)
-        : type(_type), left(std::move(_left)), right(std::move(_right)) {};
 };
 
 class StringExpr : public Expr {
    public:
     std::string val;
 
+    StringExpr(std::string s);
+
     std::vector<Expr*> get_children() const override;
 
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
-
-    StringExpr(std::string s) : val(std::move(s)) {};
 };
 
 class EnumExpr : public Expr {
    public:
     std::string scope;
     std::string name;
+    EnumExpr(std::string _scope, std::string _name);
 
     std::vector<Expr*> get_children() const override;
 
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
-    EnumExpr(std::string _scope, std::string _name)
-        : scope(std::move(_scope)), name(std::move(_name)) {};
 };
 
 class VarRefExpr : public Expr {
    public:
     std::string identifier;
 
+    VarRefExpr(std::string s);
+
     std::vector<Expr*> get_children() const override;
 
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
-
-    VarRefExpr(std::string s) : identifier(std::move(s)) {};
 };
 
 class FnExpr : public Expr {
@@ -77,11 +77,22 @@ class FnExpr : public Expr {
     std::string func_name;
     std::vector<std::unique_ptr<Expr>> args;
 
+    FnExpr(std::string fn_name);
+
     std::vector<Expr*> get_children() const override;
 
     Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
+};
 
-    FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
+class ListExpr : public Expr {
+   public:
+    std::vector<std::unique_ptr<Expr>> elements;
+
+    ListExpr();
+
+    std::vector<Expr*> get_children() const override;
+
+    Value evaluate(VarMap& var_map, FuncRegistry& fn_reg) const override;
 };
 
 class DictionaryExpr : public Expr {

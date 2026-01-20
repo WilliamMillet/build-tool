@@ -17,8 +17,8 @@ enum class LexemeType {
     BLOCK_END,
     LIST_START,
     LIST_END,
-    MACRO_FN_START,
-    MACRO_FN_END,
+    FN_START,
+    FN_END,
     STRING,
     DELIMETER,
     SCOPE_RESOLVER,
@@ -45,8 +45,8 @@ class Lexer {
     constexpr static char BLOCK_END = '}';
     constexpr static char LIST_START = '[';
     constexpr static char LIST_END = ']';
-    constexpr static char MACRO_FN_START = '(';
-    constexpr static char MACRO_FN_END = ')';
+    constexpr static char FN_START = '(';
+    constexpr static char FN_END = ')';
     constexpr static char SINGLE_RULE_NAME_START = '<';
     constexpr static char SINGLE_RULE_NAME_END = '>';
     constexpr static char STRING_QUOTE = '"';
@@ -63,8 +63,8 @@ class Lexer {
          {BLOCK_END, LexemeType::BLOCK_END},
          {LIST_START, LexemeType::LIST_START},
          {LIST_END, LexemeType::LIST_END},
-         {MACRO_FN_START, LexemeType::MACRO_FN_START},
-         {MACRO_FN_END, LexemeType::MACRO_FN_END},
+         {FN_START, LexemeType::FN_START},
+         {FN_END, LexemeType::FN_END},
          {DELIMETER, LexemeType::DELIMETER},
          {EQUALS_CHAR, LexemeType::EQUALS},
          {ADD_CHAR, LexemeType::ADD}}};

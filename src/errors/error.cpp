@@ -45,7 +45,7 @@ std::string Error::format() const {
     err += "\nMessage: " + msg;
 
     if (loc.has_value()) {
-        err += "\nLocation: " + format_file_pos() + ":\n";
+        err += "\nLocation: " + format_file_pos() + "   \n";
     }
 
     err += "\n" + format_ctx();

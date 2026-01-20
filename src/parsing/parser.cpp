@@ -21,8 +21,8 @@ std::vector<ParsedVariable> Parser::parse() try {
         } else if (match_type({LexemeType::DICT_QUALIFIER})) {
             Lexeme rule_lex = consume(LexemeType::DICT_QUALIFIER);
             VarCategory cat = categorise_dictionary(rule_lex.value);
-            std::string id = consume(LexemeType::IDENTIFIER).value;
-            var_lexes.push_back({std::move(id), consume_dict_lexemes(), cat, rule_lex.loc});
+            Lexeme id = consume(LexemeType::IDENTIFIER);
+            var_lexes.push_back({std::move(id.value), consume_dict_lexemes(), cat, id.loc});
         } else {
             consume();
         }
@@ -71,6 +71,9 @@ bool Parser::match_type(std::vector<LexemeType> type_pool) const {
 
 std::vector<Lexeme> Parser::consume_var_lexemes() try {
     expect_type(VARIABLE_STARTS);
+    if (match_type({LexemeType::BLOCK_START})) {
+        return consume_dict_lexemes();
+    }
     std::vector<Lexeme> assigned_lexemes;
     while (!at_end() && peek().type != LexemeType::NEWLINE) {
         assigned_lexemes.push_back(consume());
@@ -111,9 +114,7 @@ std::vector<Lexeme> Parser::consume_dict_lexemes() try {
 
 std::unique_ptr<Expr> Parser::parse_expr() try {
     std::unique_ptr<Expr> operand1 = parse_term();
-    if (!match_type(INFIX_OPERATORS)) {
-        return operand1;
-    } else {
+    if (match_type(INFIX_OPERATORS)) {
         Lexeme op = consume();
         switch (op.type) {
             case LexemeType::ADD: {
@@ -124,6 +125,8 @@ std::unique_ptr<Expr> Parser::parse_expr() try {
                 throw SyntaxError("Unexpected operand" + peek().value);
             }
         }
+    } else {
+        return operand1;
     }
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Parsing expression", get_loc());
@@ -137,11 +140,14 @@ std::unique_ptr<Expr> Parser::parse_term() try {
         case LexemeType::BLOCK_START: {
             return parse_dictionary();
         }
+        case LexemeType::LIST_START: {
+            return parse_list();
+        }
         case LexemeType::IDENTIFIER: {
             std::string identifier = consume(LexemeType::IDENTIFIER).value;
             switch (peek().type) {
-                case LexemeType::MACRO_FN_START: {
-                    return parse_fn_args(std::move(identifier));
+                case LexemeType::FN_START: {
+                    return parse_fn(std::move(identifier));
                 }
                 case LexemeType::SCOPE_RESOLVER: {
                     consume(LexemeType::SCOPE_RESOLVER);
@@ -161,28 +167,56 @@ std::unique_ptr<Expr> Parser::parse_term() try {
     Error::update_and_throw(excep, "Parsing term", get_loc());
 }
 
-std::unique_ptr<FnExpr> Parser::parse_fn_args(std::string fn_name) try {
+std::unique_ptr<FnExpr> Parser::parse_fn(std::string fn_name) try {
     std::unique_ptr<FnExpr> fn_expr = std::make_unique<FnExpr>(fn_name);
-    consume(LexemeType::MACRO_FN_START);
-    fn_expr->args.push_back(parse_expr());
+    Lexeme opening_paren = consume(LexemeType::FN_START);
 
-    while (match_type({LexemeType::DELIMETER})) {
+    while (!at_end() && !match_type({LexemeType::FN_END})) {
         fn_expr->args.push_back(parse_expr());
+        consume(LexemeType::DELIMETER);
     }
 
-    consume(LexemeType::MACRO_FN_END);
+    if (at_end()) {
+        throw SyntaxError("Unclosed bracket for function '" + fn_name + "'.", opening_paren.loc);
+    }
+
+    consume(LexemeType::FN_END);
 
     return fn_expr;
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Parsing function arguments", get_loc());
+    Error::update_and_throw(excep, "Parsing function", get_loc());
+}
+
+std::unique_ptr<ListExpr> Parser::parse_list() try {
+    auto list = std::make_unique<ListExpr>();
+    Lexeme opening_paren = consume(LexemeType::LIST_START);
+
+    while (!at_end() && !match_type({LexemeType::LIST_END})) {
+        list->elements.push_back(parse_expr());
+        if (match_type({LexemeType::DELIMETER})) {
+            consume(LexemeType::DELIMETER);
+        }
+    }
+
+    if (at_end()) {
+        throw SyntaxError("Unterminated list", opening_paren.loc);
+    }
+
+    consume(LexemeType::LIST_END);
+
+    return list;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Parsing list", get_loc());
 }
 
 std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
-    std::unique_ptr<DictionaryExpr> cfg_expr = std::make_unique<DictionaryExpr>();
+    consume(LexemeType::BLOCK_START);
+    consume(LexemeType::NEWLINE);
+    std::unique_ptr<DictionaryExpr> dict_expr = std::make_unique<DictionaryExpr>();
     while (!at_end() && !match_type({LexemeType::BLOCK_END})) {
         std::string id = consume(LexemeType::IDENTIFIER).value;
         consume(LexemeType::EQUALS);
-        cfg_expr->fields_map[id] = parse_expr();
+        dict_expr->fields_map[id] = parse_expr();
         consume(LexemeType::NEWLINE);
     }
     if (at_end()) {
@@ -191,7 +225,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
 
     consume(LexemeType::BLOCK_END);
 
-    return cfg_expr;
+    return dict_expr;
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Parsing dictionary", get_loc());
 }
