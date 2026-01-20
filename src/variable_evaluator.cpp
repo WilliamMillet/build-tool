@@ -1,6 +1,8 @@
 #include "variable_evaluator.hpp"
 
 #include <deque>
+#include <iostream>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,6 +18,7 @@ VariableEvaluator::VariableEvaluator(std::vector<ParsedVariable> vars, FuncRegis
     : raw_vars(std::move(vars)), fn_reg(_fn_reg) {};
 
 QualifiedDicts VariableEvaluator::evaluate() try {
+    std::cout << "\n\n" << std::endl;
     std::unordered_map<std::string, std::vector<std::string>> dep_graph;
     for (const ParsedVariable& v : raw_vars) {
         dep_graph[v.identifier] = aggregate_deps(v);
@@ -45,7 +48,7 @@ std::vector<std::string> VariableEvaluator::aggregate_deps(const ParsedVariable&
     std::deque<Expr*> q = {var.expr.get()};
     std::vector<std::string> deps;
 
-    while (q.empty()) {
+    while (!q.empty()) {
         Expr* v = q.front();
         q.pop_front();
 
@@ -80,7 +83,9 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
 
     std::deque<std::string> q;
     for (const auto& [id, indeg] : indegree) {
-        if (indeg == 0) q.push_back((id));
+        if (indeg == 0) {
+            q.push_back((id));
+        };
     }
 
     std::vector<std::string> ordered;
@@ -106,7 +111,8 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
     }
 
     vars.clear();
-    for (const std::string& id : ordered) {
+    for (const std::string& id : std::views::reverse(ordered)) {
+        std::cout << id << std::endl;
         vars.push_back(std::move(var_id_map.at(id)));
     }
 } catch (std::exception& excep) {
