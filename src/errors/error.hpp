@@ -37,6 +37,11 @@ class Error : public std::exception {
 
     void set_loc(Location _loc);
 
+    /** Set the string that is used when the what member is called*/
+    void set_what_str(std::string msg);
+
+    const char* what() const noexcept override;
+
     /** Add additional context as to the events occurring when the error was thrown */
     void add_ctx(std::string ctx);
 
@@ -49,6 +54,9 @@ class Error : public std::exception {
      * @param src_file The file the error occurred in (used to generate excerpt)
      */
     std::string format(const std::string& src_file) const;
+
+    /** Formats without file name and excerpt */
+    std::string format() const;
 
     /**
      * If e is an Error, context will be added and the location will be written if not set, then
@@ -66,8 +74,16 @@ class Error : public std::exception {
     std::optional<Location> loc;
     std::string msg;
 
+    std::string what_str;
+
     /** Get a formatted an excerpt from the codebase where the error occurred */
     std::string format_excerpt(const std::string& src_file) const;
+
+    /** Get a formatted representation of the context */
+    std::string format_ctx() const;
+
+    /** Format the position in the file to "[line]:[col]" (no square brackets) */
+    std::string format_file_pos() const;
 
     virtual std::string err_name() const;
 };

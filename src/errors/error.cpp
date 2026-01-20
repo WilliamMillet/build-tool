@@ -16,7 +16,11 @@ Error::Error(std::string _msg, Location _loc) : loc(_loc), msg(_msg) {};
 
 Error::Error(std::string _msg) : msg(_msg) {};
 
+const char* Error::what() const noexcept { return what_str.data(); };
+
 void Error::set_loc(Location _loc) { loc = _loc; };
+
+void Error::set_what_str(std::string str) { what_str = str; };
 
 void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
 
@@ -27,18 +31,24 @@ std::string Error::format(const std::string& src_file) const {
     err += "\nMessage: " + msg;
 
     if (loc.has_value()) {
-        const std::string pos = std::to_string(loc->line_no) + ":" + std::to_string(loc->col_no);
-
-        err += "\nLocation: " + src_file + ":" + pos + ":\n";
+        err += "\nLocation: " + src_file + ":" + format_file_pos() + ":\n";
         err += format_excerpt(src_file);
     }
 
-    if (!ctx_stack.empty()) {
-        err += "\nContext: Error occurred during:";
+    err += "\n" + format_ctx();
+
+    return err;
+}
+
+std::string Error::format() const {
+    std::string err = "Error raised: " + err_name();
+    err += "\nMessage: " + msg;
+
+    if (loc.has_value()) {
+        err += "\nLocation: " + format_file_pos() + ":\n";
     }
-    for (const std::string& ctx : ctx_stack) {
-        err += "\n- [" + ctx + "]";
-    }
+
+    err += "\n" + format_ctx();
 
     return err;
 }
@@ -88,25 +98,44 @@ std::string Error::format_excerpt(const std::string& src_file) const {
     return formatted;
 }
 
+std::string Error::format_ctx() const {
+    std::string ctx;
+    if (!ctx_stack.empty()) {
+        ctx += "Context: Error occurred during:";
+    }
+    for (const std::string& c : ctx_stack) {
+        ctx += "\n- [" + c + "]";
+    }
+    return ctx;
+}
+
+std::string Error::format_file_pos() const {
+    return std::to_string(loc->line_no) + ":" + std::to_string(loc->col_no);
+}
+
 void Error::update_and_throw(std::exception& excep, std::string ctx, Location loc) {
     if (Error* err = dynamic_cast<Error*>(&excep)) {
         err->add_ctx(ctx);
         if (!err->has_loc()) {
             err->loc = loc;
         }
+        err->set_what_str(err->format());
         throw;
+    } else {
+        err->set_what_str(excep.what());
+        throw UnknownError(excep, ctx, loc);
     }
-
-    throw UnknownError(excep, ctx, loc);
 }
 
 void Error::update_and_throw(std::exception& excep, std::string ctx) {
     if (Error* err = dynamic_cast<Error*>(&excep)) {
         err->add_ctx(ctx);
+        err->set_what_str(err->format());
         throw;
+    } else {
+        err->set_what_str(excep.what());
+        throw UnknownError(excep, ctx);
     }
-
-    throw UnknownError(excep, ctx);
 }
 
 std::string Error::err_name() const { return "Error"; }
