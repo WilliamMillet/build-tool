@@ -4,8 +4,8 @@
 
 using Flags = std::vector<std::string>;
 
-namespace TestUtils {
-namespace ExprFactories {
+namespace Testing {
+namespace Factories {
 
 /**
  * Builds the following config expression:
@@ -16,8 +16,8 @@ namespace ExprFactories {
  *     default = "app" # This is the equivalent of 'all' from make
  * }
  */
-std::unique_ptr<DictionaryExpr> create_cfg(std::string compiler, Flags compiler_flags,
+std::unique_ptr<DictionaryExpr> create_cfg(std::unique_ptr<Expr> compiler, Flags compiler_flags,
                                            Flags link_flags, std::string default_rule);
 
-}  // namespace ExprFactories
-}  // namespace TestUtils
+}  // namespace Factories
+}  // namespace Testing

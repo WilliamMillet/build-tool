@@ -5,14 +5,15 @@
 #include "src/dictionaries/config.hpp"
 #include "src/parsing/expr.hpp"
 
-std::unique_ptr<DictionaryExpr> TestUtils::ExprFactories::create_cfg(std::string compiler,
-                                                                     Flags compiler_flags,
-                                                                     Flags link_flags,
-                                                                     std::string default_rule) {
+// compiler is passed as an expr for testing non-string arguments
+std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg(std::unique_ptr<Expr> compiler,
+                                                               Flags compiler_flags,
+                                                               Flags link_flags,
+                                                               std::string default_rule) {
     std::unique_ptr<DictionaryExpr> cfg = std::make_unique<DictionaryExpr>();
     auto& cmap = cfg->fields_map;
 
-    cmap[Config::COMPILER_FIELD] = std::make_unique<StringExpr>(std::move(compiler));
+    cmap[Config::COMPILER_FIELD] = std::move(compiler);
 
     std::vector<std::unique_ptr<Expr>> c_flags;
     for (std::string flag : compiler_flags) {

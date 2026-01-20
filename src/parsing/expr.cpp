@@ -1,9 +1,12 @@
 #include "expr.hpp"
 
+#include <iostream>
 #include <memory>
 #include <ranges>
 #include <string>
 #include <vector>
+
+#include "../errors/error.hpp"
 
 BinaryOpExpr::BinaryOpExpr(BinaryOpType _type, std::unique_ptr<Expr> _left,
                            std::unique_ptr<Expr> _right)
@@ -12,13 +15,13 @@ BinaryOpExpr::BinaryOpExpr(BinaryOpType _type, std::unique_ptr<Expr> _left,
 std::vector<Expr*> BinaryOpExpr::get_children() const {
     std::vector<Expr*> res;
 
-    if (left) res.push_back(left.get());
-    if (right) res.push_back(right.get());
+    if (left != nullptr) res.push_back(left.get());
+    if (right != nullptr) res.push_back(right.get());
 
     return res;
 }
 
-Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
+Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const try {
     Value val = left->evaluate(var_map, fn_reg);
     switch (type) {
         case BinaryOpType::ADD: {
@@ -26,15 +29,19 @@ Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
         }
     }
     return val;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating binary operation expression");
 }
 
 StringExpr::StringExpr(std::string s) : val(std::move(s)) {};
 
 std::vector<Expr*> StringExpr::get_children() const { return {}; }
 
-Value StringExpr::evaluate(VarMap&, FuncRegistry&) const {
+Value StringExpr::evaluate(VarMap&, FuncRegistry&) const try {
     std::string val_dup = val;
     return Value{std::move(val_dup)};
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating string expression");
 }
 
 EnumExpr::EnumExpr(std::string _scope, std::string _name)
@@ -42,20 +49,24 @@ EnumExpr::EnumExpr(std::string _scope, std::string _name)
 
 std::vector<Expr*> EnumExpr::get_children() const { return {}; }
 
-Value EnumExpr::evaluate(VarMap&, FuncRegistry&) const {
+Value EnumExpr::evaluate(VarMap&, FuncRegistry&) const try {
     return Value(ScopedEnumValue(scope, name));
-};
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating enum expression");
+}
 
 VarRefExpr::VarRefExpr(std::string s) : identifier(std::move(s)) {}
 
 std::vector<Expr*> VarRefExpr::get_children() const { return {}; }
 
-Value VarRefExpr::evaluate(VarMap& var_map, FuncRegistry&) const {
+Value VarRefExpr::evaluate(VarMap& var_map, FuncRegistry&) const try {
     auto var_val = var_map.find(identifier);
     if (var_val == var_map.end()) {
-        throw std::invalid_argument("Could not resolve variable '" + identifier + "'");
+        throw ValueError("Could not resolve variable '" + identifier + "'");
     }
     return var_val->second;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating variable reference expression");
 }
 
 FnExpr::FnExpr(std::string fn_name) : func_name(std::move(fn_name)) {};
@@ -70,20 +81,22 @@ std::vector<Expr*> FnExpr::get_children() const {
     return res;
 }
 
-Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
+Value FnExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const try {
     std::vector<Value> arg_vals;
     for (const std::unique_ptr<Expr>& expr : args) {
         arg_vals.push_back(expr->evaluate(var_map, fn_reg));
     }
 
     return fn_reg.call(func_name, std::move(arg_vals));
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating function expression");
 }
 
 ListExpr::ListExpr() {};
 
 ListExpr::ListExpr(std::vector<std::unique_ptr<Expr>> elems) : elements(std::move(elems)) {}
 
-std::vector<Expr*> ListExpr::get_children() const {
+std::vector<Expr*> ListExpr::get_children() const try {
     std::vector<Expr*> res;
 
     for (const std::unique_ptr<Expr>& child : elements) {
@@ -91,6 +104,8 @@ std::vector<Expr*> ListExpr::get_children() const {
     }
 
     return res;
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating list expression");
 }
 
 Value ListExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
@@ -110,7 +125,7 @@ std::vector<Expr*> DictionaryExpr::get_children() const {
     return children;
 }
 
-Value DictionaryExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
+Value DictionaryExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const try {
     Dictionary Dictionary;
 
     for (const auto& [id, expr] : fields_map) {
@@ -118,4 +133,6 @@ Value DictionaryExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const {
     }
 
     return Value{std::move(Dictionary)};
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "Evaluating dictionary expression");
 }
