@@ -8,6 +8,11 @@
 
 class Config {
    public:
+    inline const static std::string COMPILER_FIELD = "compiler";
+    inline const static std::string COMPILATION_FLAGS_FIELD = "compilation_flags";
+    inline const static std::string LINK_FLAGS_FIELD = "link_flags";
+    inline const static std::string DEFAULT_FIELD = "default_rule";
+
     Config(std::string _name, Value dict);
 
     const std::string& get_compiler() const;
@@ -16,11 +21,6 @@ class Config {
     const std::string& get_default_rule() const;
 
    private:
-    inline const static std::string COMPILER_FIELD = "compiler";
-    inline const static std::string COMPILATION_FLAGS_FIELD = "compilation_flags";
-    inline const static std::string LINK_FLAGS_FIELD = "link_flags";
-    inline const static std::string DEFAULT_SINGLE_RULE_FIELD = "default_rule";
-
     std::string name;
     std::string compiler;
     std::vector<std::string> compilation_flags;

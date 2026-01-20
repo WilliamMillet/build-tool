@@ -1,27 +1,28 @@
 #include "config.hpp"
 
+#include <functional>
+
 Config::Config(std::string _name, Value cfg_val) : name(_name) {
     cfg_val.assert_type(ValueType::Dictionary);
     Dictionary dict = cfg_val.get<Dictionary>();
-    dict.assert_contains(
-        {{COMPILER_FIELD, ValueType::STRING}, {DEFAULT_SINGLE_RULE_FIELD, ValueType::STRING}});
+    dict.assert_contains({{COMPILER_FIELD, ValueType::STRING}, {DEFAULT_FIELD, ValueType::STRING}});
 
     compiler = dict.get(COMPILER_FIELD).get<std::string>();
-    default_rule = dict.get(DEFAULT_SINGLE_RULE_FIELD).get<std::string>();
+    default_rule = dict.get(DEFAULT_FIELD).get<std::string>();
 
-    std::vector<std::pair<std::string, std::vector<std::string>>> flag_pair = {
-        {COMPILATION_FLAGS_FIELD, compilation_flags}, {LINK_FLAGS_FIELD, link_flags}};
+    std::vector<std::pair<std::string, std::vector<std::string>*>> flag_pair = {
+        {COMPILATION_FLAGS_FIELD, &compilation_flags}, {LINK_FLAGS_FIELD, &link_flags}};
     for (auto& [field_name, out] : flag_pair) {
         if (dict.contains(field_name)) {
             dict.assert_contains({{field_name, ValueType::LIST}});
             ValueList flag_list = dict.get(field_name).get<ValueList>();
-            out = ValueUtils::vectorise<std::string>(dict.get(field_name).get<ValueList>());
+            *out = ValueUtils::vectorise<std::string>(dict.get(field_name).get<ValueList>());
         }
     }
 
-    if (dict.contains(DEFAULT_SINGLE_RULE_FIELD)) {
-        dict.assert_contains({{DEFAULT_SINGLE_RULE_FIELD, ValueType::LIST}});
-        default_rule = dict.get(DEFAULT_SINGLE_RULE_FIELD).get<std::string>();
+    if (dict.contains(DEFAULT_FIELD)) {
+        dict.assert_contains({{DEFAULT_FIELD, ValueType::STRING}});
+        default_rule = dict.get(DEFAULT_FIELD).get<std::string>();
     }
 }
 

@@ -31,6 +31,10 @@ QualifiedDicts VariableEvaluator::evaluate() try {
         process_val(var, var_map.at(var.identifier), rules, cfg);
     }
 
+    if (cfg == nullptr) {
+        throw LogicError("Could not find <Config> qualified dictionary. Config must be added");
+    }
+
     return QualifiedDicts{std::move(rules), *cfg};
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Variable evaluation (includes all dictionaries)");
@@ -61,11 +65,13 @@ std::vector<std::string> VariableEvaluator::aggregate_deps(const ParsedVariable&
 void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
                                            const DepGraph& dep_graph) const try {
     std::unordered_map<std::string, ParsedVariable> var_id_map;
+    std::unordered_map<std::string, int> indegree;
+
     for (ParsedVariable& v : vars) {
+        indegree[v.identifier] = 0;
         var_id_map[v.identifier] = std::move(v);
     }
 
-    std::unordered_map<std::string, int> indegree;
     for (const auto& [id, adj] : dep_graph) {
         for (const std::string& dep : adj) {
             indegree[dep]++;
@@ -77,12 +83,12 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
         if (indeg == 0) q.push_back((id));
     }
 
-    std::vector<ParsedVariable> ordered;
+    std::vector<std::string> ordered;
     while (!q.empty()) {
         std::string v = q.front();
         q.pop_front();
 
-        ordered.push_back(std::move(var_id_map.at(v)));
+        ordered.push_back(v);
 
         for (const std::string& dep : dep_graph.at(v)) {
             indegree.at(dep)--;
@@ -93,7 +99,15 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
     }
 
     if (ordered.size() != dep_graph.size()) {
-        throw LogicError("Cyclical dependency between variables detected");
+        throw LogicError("Cyclical dependency between variables detected. Variable count was " +
+                         std::to_string(dep_graph.size()) +
+                         " but topological traversal could only reach " +
+                         std::to_string(ordered.size()));
+    }
+
+    vars.clear();
+    for (const std::string& id : ordered) {
+        vars.push_back(std::move(var_id_map.at(id)));
     }
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Determining variable evaluation order");
