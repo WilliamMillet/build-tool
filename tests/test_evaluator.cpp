@@ -32,7 +32,8 @@ TEST_CASE("Config only with no variables evaluates correctly", "[variable_evalua
     const std::vector<std::string> c_flags = {"-g", "Werror"};
     const std::vector<std::string> l_flags = {};
 
-    auto cfg = Testing::Factories::create_cfg(std::move(compiler), c_flags, l_flags, default_rule);
+    auto cfg =
+        Testing::Factories::create_cfg_dict(std::move(compiler), c_flags, l_flags, default_rule);
 
     std::vector<ParsedVariable> vars;
     vars.push_back(ParsedVariable{"cfg", std::move(cfg), VarCategory::CONFIG, Location{0, 0, 0}});
@@ -50,9 +51,10 @@ TEST_CASE("Config only with no variables evaluates correctly", "[variable_evalua
 }
 
 TEST_CASE("Config can be based on simple variable dependencies", "[variable_evaluator]") {
-    std::unique_ptr<VarRefExpr> compiler = std::make_unique<VarRefExpr>("foo");
+    auto compiler = std::make_unique<VarRefExpr>("foo");
 
-    auto cfg = Testing::Factories::create_cfg(std::move(compiler), {"-g", "Werror"}, {}, "test");
+    auto cfg =
+        Testing::Factories::create_cfg_dict(std::move(compiler), {"-g", "Werror"}, {}, "test");
     auto foo = std::make_unique<StringExpr>("gcc");
     std::vector<ParsedVariable> vars;
     vars.push_back({"cfg", std::move(cfg), VarCategory::CONFIG, Location{0, 0, 0}});
@@ -62,6 +64,7 @@ TEST_CASE("Config can be based on simple variable dependencies", "[variable_eval
 
     QualifiedDicts dicts = evaluator.evaluate();
 
+    REQUIRE(dicts.cfg.get_name() == "cfg");
     REQUIRE(dicts.cfg.get_compiler() == "gcc");
 }
 
@@ -102,7 +105,7 @@ TEST_CASE("Test complex variable dependency DAG", "[variable_evaluator]") {
     vars.push_back(std::move(d));
 
     auto compiler = std::make_unique<VarRefExpr>("a");
-    auto cfg = Testing::Factories::create_cfg(std::move(compiler), {}, {}, "");
+    auto cfg = Testing::Factories::create_cfg_dict(std::move(compiler), {}, {}, "");
     vars.push_back(ParsedVariable{"cfg", std::move(cfg), VarCategory::CONFIG, Location{0, 0, 0}});
 
     VariableEvaluator evaluator(std::move(vars), FuncRegistry());
@@ -113,7 +116,7 @@ TEST_CASE("Test complex variable dependency DAG", "[variable_evaluator]") {
 
 TEST_CASE("Rule parses correctly", "[variable_evaluator]") {
     std::vector<ParsedVariable> vars;
-    vars.push_back({"cfg", Testing::Factories::create_cfg(), VarCategory::CONFIG, {0, 0, 0}});
+    vars.push_back({"cfg", Testing::Factories::create_cfg_dict(), VarCategory::CONFIG, {0, 0, 0}});
 
     auto rule = std::make_unique<DictionaryExpr>();
 
@@ -139,7 +142,7 @@ TEST_CASE("Rule parses correctly", "[variable_evaluator]") {
 
 TEST_CASE("MultiRule parses correctly", "[variable_evaluator]") {
     std::vector<ParsedVariable> vars;
-    vars.push_back({"cfg", Testing::Factories::create_cfg(), VarCategory::CONFIG, {0, 0, 0}});
+    vars.push_back({"cfg", Testing::Factories::create_cfg_dict(), VarCategory::CONFIG, {0, 0, 0}});
 
     auto rule = std::make_unique<DictionaryExpr>();
 
@@ -172,7 +175,7 @@ TEST_CASE("MultiRule parses correctly", "[variable_evaluator]") {
 
 TEST_CASE("Clean rule parses correctly", "[variable_evaluator]") {
     std::vector<ParsedVariable> vars;
-    vars.push_back({"cfg", Testing::Factories::create_cfg(), VarCategory::CONFIG, {0, 0, 0}});
+    vars.push_back({"cfg", Testing::Factories::create_cfg_dict(), VarCategory::CONFIG, {0, 0, 0}});
 
     auto rule = std::make_unique<DictionaryExpr>();
 
