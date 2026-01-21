@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "dictionaries/config.hpp"
 #include "dictionaries/rules.hpp"
 
 class RuleGraph {
@@ -16,11 +15,8 @@ class RuleGraph {
     /** Determine if there is a cyclical dependency amongst rules */
     bool cyclical_dep_exists() const;
 
-    /** Returns a list  */
+    /** Returns all the dependencies of target */
     const std::vector<std::string>& dependencies(const std::string& target) const;
-
-    /** Returns a list of all string shell commands needed to be executed to run a rule */
-    std::vector<std::string> get_build_cmds(const Config& cfg, const std::string& target) const;
 
     /** Returns true iff a rule exists on the graph */
     bool is_rule(const std::string& rule) const;

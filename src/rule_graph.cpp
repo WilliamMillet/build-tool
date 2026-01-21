@@ -1,6 +1,7 @@
 #include "rule_graph.hpp"
 
 #include <deque>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -22,9 +23,19 @@ RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) try {
 }
 
 bool RuleGraph::cyclical_dep_exists() const try {
-    // Topological sort used for cycle detection
-
+    std::cout << "Looking for cyclical dependency" << std::endl;
+    // Topological sort used for cycle detection. Operates on the subset of the graph where only
+    // recipe nodes remain (no files)
     std::unordered_map<std::string, int> indegree;
+    for (const auto& [rule, deps] : dep_map) {
+        indegree[rule] = 0;
+        for (const std::string& d : deps) {
+            if (is_rule(d)) {
+                indegree[d] = 0;
+            }
+        }
+    }
+
     for (const auto& [rule, deps] : dep_map) {
         for (const std::string& d : deps) {
             if (is_rule(d)) {
@@ -48,6 +59,8 @@ bool RuleGraph::cyclical_dep_exists() const try {
         reached++;
 
         for (const std::string& w : dependencies(v)) {
+            if (!is_rule(w)) continue;
+
             indegree.at(w)--;
             if (indegree.at(w) == 0) {
                 q.push_back(w);
@@ -56,7 +69,7 @@ bool RuleGraph::cyclical_dep_exists() const try {
     }
 
     // If we were not able to reach all rules there was a cycle
-    return (reached == num_rules());
+    return (reached != num_rules());
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Scanning for cyclical dependency in rules");
 }
