@@ -1,28 +1,14 @@
 #include "config.hpp"
 
-Config::Config(std::string _name, Value cfg_val) : name(_name) {
-    cfg_val.assert_type(ValueType::Dictionary);
-    Dictionary dict = cfg_val.get<Dictionary>();
-    dict.assert_contains({{COMPILER_FIELD, ValueType::STRING}, {DEFAULT_FIELD, ValueType::STRING}});
+Config::Config(std::string _name, std::string _compiler, std::string _default_rule,
+               std::vector<std::string> _compilation_flags, std::vector<std::string> _link_flags)
+    : name(_name),
+      compiler(_compiler),
+      compilation_flags(_compilation_flags),
+      link_flags(_link_flags),
+      default_rule(_default_rule) {}
 
-    compiler = dict.get(COMPILER_FIELD).get<std::string>();
-    default_rule = dict.get(DEFAULT_FIELD).get<std::string>();
-
-    std::vector<std::pair<std::string, std::vector<std::string>*>> flag_pair = {
-        {COMPILATION_FLAGS_FIELD, &compilation_flags}, {LINK_FLAGS_FIELD, &link_flags}};
-    for (auto& [field_name, out] : flag_pair) {
-        if (dict.contains(field_name)) {
-            dict.assert_contains({{field_name, ValueType::LIST}});
-            ValueList flag_list = dict.get(field_name).get<ValueList>();
-            *out = ValueUtils::vectorise<std::string>(dict.get(field_name).get<ValueList>());
-        }
-    }
-
-    if (dict.contains(DEFAULT_FIELD)) {
-        dict.assert_contains({{DEFAULT_FIELD, ValueType::STRING}});
-        default_rule = dict.get(DEFAULT_FIELD).get<std::string>();
-    }
-}
+const std::string& Config::get_name() const { return name; }
 
 const std::string& Config::get_compiler() const { return compiler; }
 

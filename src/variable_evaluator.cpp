@@ -8,6 +8,8 @@
 
 #include "built_in/func_registry.hpp"
 #include "dictionaries/config.hpp"
+#include "dictionaries/config_factory.hpp"
+#include "dictionaries/rule_factory.hpp"
 #include "dictionaries/rules.hpp"
 #include "errors/error.hpp"
 #include "parsing/parser.hpp"
@@ -119,34 +121,16 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
 void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
                                     std::vector<std::unique_ptr<Rule>>& rules,
                                     std::unique_ptr<Config>& cfg) {
-    const std::string& id = var.identifier;
-
-    switch (var.category) {
-        case VarCategory::CLEAN: {
-            rules.push_back(std::make_unique<CleanRule>(std::move(var.identifier), std::move(val),
-                                                        std::move(var.loc)));
-            break;
+    if (var.category == VarCategory::CONFIG) {
+        if (cfg != nullptr) {
+            throw SyntaxError(
+                "Duplicate <Config> dictionaries detected. Only one configuration may be set",
+                var.loc);
         }
-        case VarCategory::SINGLE_RULE: {
-            rules.push_back(std::make_unique<SingleRule>(std::move(id), std::move(val), var.loc));
-            break;
-        }
-        case VarCategory::MULTI_RULE: {
-            rules.push_back(std::make_unique<MultiRule>(std::move(id), std::move(val), var.loc));
-            break;
-        }
-        case VarCategory::CONFIG: {
-            if (cfg != nullptr) {
-                throw SyntaxError(
-                    "Duplicate <Config> dictionaries detected. Only one configuration may be set",
-                    var.loc);
-            }
-            cfg = std::make_unique<Config>(std::move(id), std::move(val));
-            break;
-        }
-        case VarCategory::REGULAR: {
-            // Not a qualified dictionary so we skip
-            break;
-        };
+        ConfigFactory fac;
+        cfg = fac.make_config(var.identifier, val);
+    } else if (var.category != VarCategory::REGULAR) {
+        RuleFactory fac;
+        rules.push_back(fac.make_rule(var.identifier, val, var.loc, var.category));
     }
 }

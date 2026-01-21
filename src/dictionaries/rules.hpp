@@ -6,7 +6,6 @@
 
 #include "../built_in/enums.hpp"
 #include "../errors/error.hpp"
-#include "../value.hpp"
 #include "config.hpp"
 
 // TODO: This and the associated .cpp file could use significant refactors.
@@ -27,7 +26,7 @@ inline constexpr static std::string TARGETS = "targets";
 
 class Rule {
    public:
-    Rule(std::string _qualifier, std::string _name, Location _loc);
+    Rule(std::string _qualifier, std::string _name, std::vector<std::string>, Location _loc);
 
     const std::string& get_name() const;
     const std::vector<std::string>& get_deps() const;
@@ -67,7 +66,7 @@ class Rule {
 
 class SingleRule : public Rule {
    public:
-    SingleRule(std::string _name, Value obj, Location _loc);
+    SingleRule(std::string _name, std::vector<std::string> _deps, Step step, Location _loc);
 
     void run(const Config& cfg) const override;
 
@@ -79,7 +78,8 @@ class SingleRule : public Rule {
 
 class MultiRule : public Rule {
    public:
-    MultiRule(std::string _name, Value obj, Location _loc);
+    MultiRule(std::string _name, std::vector<std::string> deps, std::vector<std::string> out,
+              Step step, Location _loc);
 
     void run(const Config& cfg) const override;
 
@@ -93,7 +93,7 @@ class MultiRule : public Rule {
 
 class CleanRule : public Rule {
    public:
-    CleanRule(std::string _name, Value obj, Location _loc);
+    CleanRule(std::string name, std::vector<std::string> targets, Location _loc);
 
     void run(const Config& cfg) const override;
 

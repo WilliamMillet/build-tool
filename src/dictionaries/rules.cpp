@@ -15,8 +15,8 @@
 
 namespace fs = std::filesystem;
 
-Rule::Rule(std::string _qualifier, std::string _name, Location _loc)
-    : qualifier("<" + _qualifier + ">"), name(_name), loc(_loc) {};
+Rule::Rule(std::string _qualifier, std::string _name, std::vector<std::string> _deps, Location _loc)
+    : qualifier("<" + _qualifier + ">"), name(_name), deps(_deps), loc(_loc) {};
 
 const std::vector<std::string>& Rule::get_deps() const { return deps; };
 const std::string& Rule::get_name() const { return name; };
@@ -42,7 +42,7 @@ void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const t
         throw SystemError("Compilation failed for '" + qualifier + " " + name + "'");
     }
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Compiling", get_loc());
+    Error::update_and_throw(excep, "Compiling", loc);
 }
 
 bool Rule::has_updated_dep() const {
@@ -54,15 +54,9 @@ bool Rule::has_updated_dep() const {
     });
 }
 
-SingleRule::SingleRule(std::string _name, Value obj, Location _loc) try
-    : Rule("Rule", std::move(_name), _loc) {
-    obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
-    dict.assert_contains(
-        {{RuleFields::DEPS, ValueType::LIST}, {RuleFields::STEP, ValueType::ENUM}});
-
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
-    step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
+SingleRule::SingleRule(std::string _name, std::vector<std::string> deps, Step _step,
+                       Location _loc) try
+    : Rule("Rule", std::move(_name), std::move(deps), _loc), step(_step) {
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Constructing '<Rule> " + _name + "'", _loc);
 }
@@ -89,23 +83,9 @@ void SingleRule::run(const Config& cfg) const try {
     Error::update_and_throw(excep, "Running '<Rule> " + name + "'", get_loc());
 }
 
-MultiRule::MultiRule(std::string _name, Value obj, Location _loc) try
-    : Rule("MultiRule", std::move(_name), _loc) {
-    obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
-    dict.assert_contains({{RuleFields::DEPS, ValueType::LIST},
-                          {RuleFields::OUTPUT, ValueType::LIST},
-                          {RuleFields::STEP, ValueType::ENUM}});
-
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
-    output = ValueUtils::vectorise<std::string>(dict.get(RuleFields::OUTPUT).get<ValueList>());
-
-    if (deps.size() != output.size()) {
-        throw ValueError("Error in MultiRule '" + name + "'. 'deps' length (" +
-                         std::to_string(deps.size()) + ") is not the same as 'output' length (" +
-                         std::to_string(output.size()) + ").");
-    }
-    step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
+MultiRule::MultiRule(std::string _name, std::vector<std::string> _deps,
+                     std::vector<std::string> _out, Step _step, Location _loc) try
+    : Rule("MultiRule", std::move(_name), std::move(_deps), _loc), output(_out), step(_step) {
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Constructing '<MultiRule> " + _name + "'", _loc);
 }
@@ -131,14 +111,10 @@ void MultiRule::run(const Config& cfg) const try {
     Error::update_and_throw(excep, "Running '<MultiRule> " + name + "'", get_loc());
 }
 
-CleanRule::CleanRule(std::string _name, Value obj, Location _loc) try
-    : Rule("Clean", std::move(_name), _loc) {
-    obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
-    dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::TARGETS).get<ValueList>());
+CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Location _loc) try
+    : Rule("Clean", std::move(name), std::move(targets), _loc) {
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Constructing '<Clean> " + _name + "'", _loc);
+    Error::update_and_throw(excep, "Constructing '<Clean> " + name + "'", _loc);
 }
 
 /** There is no condition on cleaning */

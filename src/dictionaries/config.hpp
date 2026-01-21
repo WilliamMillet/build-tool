@@ -4,17 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "../value.hpp"
-
 class Config {
    public:
-    inline const static std::string COMPILER_FIELD = "compiler";
-    inline const static std::string COMPILATION_FLAGS_FIELD = "compilation_flags";
-    inline const static std::string LINK_FLAGS_FIELD = "link_flags";
-    inline const static std::string DEFAULT_FIELD = "default_rule";
+    Config(std::string _name, std::string _compiler, std::string _default_rule,
+           std::vector<std::string> _compilation_flags, std::vector<std::string> _link_flags);
 
-    Config(std::string _name, Value dict);
-
+    const std::string& get_name() const;
     const std::string& get_compiler() const;
     const std::vector<std::string>& get_compilation_flags() const;
     const std::vector<std::string>& get_link_flags() const;
