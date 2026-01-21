@@ -135,7 +135,7 @@ void Error::update_and_throw(std::exception& excep, std::string ctx) {
         throw;
     } else {
         UnknownError unknown_err{excep, ctx};
-        unknown_err.set_what_str(excep.what());
+        unknown_err.set_what_str(unknown_err.format());
         throw unknown_err;
     }
 }
