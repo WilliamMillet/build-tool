@@ -16,7 +16,7 @@ const std::vector<std::string>& Rule::get_deps() const { return deps; };
 const std::string& Rule::get_name() const { return name; };
 const Location& Rule::get_loc() const { return loc; };
 
-bool Rule::has_updated_dep(FSGateway fs) const {
+bool Rule::has_updated_dep(FSGateway& fs) const {
     if (!fs.exists(name)) return true;
 
     auto target_write_t = fs.last_write_time(name);
@@ -32,7 +32,7 @@ SingleRule::SingleRule(std::string _name, std::vector<std::string> deps, Step _s
     Error::update_and_throw(excep, "Constructing '<Rule> " + _name + "'", _loc);
 }
 
-bool SingleRule::should_run(FSGateway fs) const { return has_updated_dep(fs); }
+bool SingleRule::should_run(FSGateway& fs) const { return has_updated_dep(fs); }
 
 void SingleRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
     std::vector<std::string> cmd = {cfg.compiler};
@@ -61,7 +61,7 @@ MultiRule::MultiRule(std::string _name, std::vector<std::string> _deps,
     Error::update_and_throw(excep, "Constructing '<MultiRule> " + _name + "'", _loc);
 }
 
-bool MultiRule::should_run(FSGateway fs) const { return has_updated_dep(fs); }
+bool MultiRule::should_run(FSGateway& fs) const { return has_updated_dep(fs); }
 
 void MultiRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
     // Invariant deps.size() == output.size() should be enforced in the constructor
@@ -89,7 +89,7 @@ CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Locatio
 }
 
 /** There is no condition on cleaning */
-bool CleanRule::should_run(FSGateway) const { return true; }
+bool CleanRule::should_run(FSGateway&) const { return true; }
 
 void CleanRule::run(const Config&, ProcessRunner* process_runner) const try {
     std::vector<std::string> clean_cmd = {"rm"};

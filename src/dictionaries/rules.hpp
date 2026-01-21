@@ -48,7 +48,7 @@ class Rule {
      * if it could be called from any position, then it would have to do it's own recursive check
      * which would lead to O(n^2) runtime for the entire traversal.
      */
-    virtual bool should_run(FSGateway fs) const = 0;
+    virtual bool should_run(FSGateway& fs) const = 0;
 
    protected:
     std::string qualifier;
@@ -60,7 +60,7 @@ class Rule {
      * Returns true if and only if an immediate dependency's file output is newer then the 'name'
      * file
      */
-    bool has_updated_dep(FSGateway fs) const;
+    bool has_updated_dep(FSGateway& fs) const;
 };
 
 class SingleRule : public Rule {
@@ -69,7 +69,7 @@ class SingleRule : public Rule {
 
     void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run(FSGateway fs) const override;
+    bool should_run(FSGateway& fs) const override;
 
    protected:
     Step step;
@@ -82,7 +82,7 @@ class MultiRule : public Rule {
 
     void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run(FSGateway fs) const override;
+    bool should_run(FSGateway& fs) const override;
 
    protected:
     // The output files. For all i, output[i] will be the output file for deps[i]
@@ -96,7 +96,7 @@ class CleanRule : public Rule {
 
     void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run(FSGateway fs) const override;
+    bool should_run(FSGateway& fs) const override;
 };
 
 #endif

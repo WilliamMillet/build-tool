@@ -29,7 +29,7 @@ void RuleRunner::run_rule_recurse(const std::string& rule_name, Visited& visited
     visited.insert(rule_name);
 
     const Rule& rule = graph.get_rule(rule_name);
-    if (rule.should_run()) {
+    if (rule.should_run(*fs_gateway)) {
         rule.run(config, process_runner);
     }
 } catch (std::exception& excep) {
