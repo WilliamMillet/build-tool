@@ -2,8 +2,12 @@
 
 #include "errors/error.hpp"
 
-RuleRunner::RuleRunner(RuleGraph rule_graph, Config config)
-    : graph(std::move(rule_graph)), cfg(config) {};
+RuleRunner::RuleRunner(RuleGraph rule_graph, Config cfg, ProcessRunner* proc_runner,
+                       FSGateway* fs_gw)
+    : graph(std::move(rule_graph)),
+      config(std::move(cfg)),
+      process_runner(std::move(proc_runner)),
+      fs_gateway(std::move(fs_gw)) {};
 
 void RuleRunner::run_rule(const std::string& rule_name) const {
     if (!graph.is_rule(rule_name)) {
@@ -26,7 +30,7 @@ void RuleRunner::run_rule_recurse(const std::string& rule_name, Visited& visited
 
     const Rule& rule = graph.get_rule(rule_name);
     if (rule.should_run()) {
-        rule.run(cfg);
+        rule.run(config, process_runner);
     }
 } catch (std::exception& excep) {
     if (graph.is_rule(rule_name)) {

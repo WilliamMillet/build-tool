@@ -1,6 +1,10 @@
+#ifndef FS_GATEWAY_H
+#define FS_GATEWAY_H
+
 #include <filesystem>
 #include <string>
 
+/** Interface between program and file system. Primarily useful for enabling dependency injection */
 class FSGateway {
    public:
     ~FSGateway() = default;
@@ -20,3 +24,5 @@ class ProdFSGateway : public FSGateway {
 
     void touch(std::string filename) override;
 };
+
+#endif

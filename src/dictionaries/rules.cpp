@@ -4,16 +4,10 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <filesystem>
 #include <string>
 
 #include "../errors/error.hpp"
 #include "config.hpp"
-#include "spawn.h"
-#include "sys/wait.h"
-#include "unistd.h"
-
-namespace fs = std::filesystem;
 
 Rule::Rule(std::string _qualifier, std::string _name, std::vector<std::string> _deps, Location _loc)
     : qualifier("<" + _qualifier + ">"), name(_name), deps(_deps), loc(_loc) {};
@@ -22,36 +16,12 @@ const std::vector<std::string>& Rule::get_deps() const { return deps; };
 const std::string& Rule::get_name() const { return name; };
 const Location& Rule::get_loc() const { return loc; };
 
-void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const try {
-    std::vector<char*> raw_args;
-    raw_args.reserve(cmd.size());
-    for (std::string& s : cmd) {
-        raw_args.push_back(s.data());
-    }
-    raw_args.push_back(nullptr);
+bool Rule::has_updated_dep(FSGateway fs) const {
+    if (!fs.exists(name)) return true;
 
-    const char* compiler_arr = cfg.compiler.data();
-    pid_t proc;
-    int spawn_res = posix_spawnp(&proc, compiler_arr, nullptr, nullptr, raw_args.data(), environ);
-    if (spawn_res != 0) {
-        throw SystemError("Compilation failed for '" + qualifier + " " + name + "'");
-    }
-
-    int status;
-    waitpid(proc, &status, 0);
-    if (status != 0) {
-        throw SystemError("Compilation failed for '" + qualifier + " " + name + "'");
-    }
-} catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Compiling", loc);
-}
-
-bool Rule::has_updated_dep() const {
-    if (!fs::exists(name)) return true;
-
-    auto target_write_t = fs::last_write_time(name);
+    auto target_write_t = fs.last_write_time(name);
     return std::ranges::any_of(deps, [&](std::string d) {
-        return !fs::exists(d) || fs::last_write_time(d) >= target_write_t;
+        return !fs.exists(d) || fs.last_write_time(d) >= target_write_t;
     });
 }
 
@@ -62,9 +32,9 @@ SingleRule::SingleRule(std::string _name, std::vector<std::string> deps, Step _s
     Error::update_and_throw(excep, "Constructing '<Rule> " + _name + "'", _loc);
 }
 
-bool SingleRule::should_run() const { return has_updated_dep(); }
+bool SingleRule::should_run(FSGateway fs) const { return has_updated_dep(fs); }
 
-void SingleRule::run(const Config& cfg) const try {
+void SingleRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
     std::vector<std::string> cmd = {cfg.compiler};
 
     auto& flags = (step == Step::COMPILE) ? cfg.compilation_flags : cfg.link_flags;
@@ -79,7 +49,7 @@ void SingleRule::run(const Config& cfg) const try {
     cmd.push_back("-o");
     cmd.push_back(name);
 
-    try_compile(cmd, cfg);
+    process_runner->run(cmd);
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Running '<Rule> " + name + "'", get_loc());
 }
@@ -91,9 +61,9 @@ MultiRule::MultiRule(std::string _name, std::vector<std::string> _deps,
     Error::update_and_throw(excep, "Constructing '<MultiRule> " + _name + "'", _loc);
 }
 
-bool MultiRule::should_run() const { return has_updated_dep(); }
+bool MultiRule::should_run(FSGateway fs) const { return has_updated_dep(fs); }
 
-void MultiRule::run(const Config& cfg) const try {
+void MultiRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
     // Invariant deps.size() == output.size() should be enforced in the constructor
     for (size_t i = 0; i < deps.size(); i++) {
         std::vector<std::string> cmd = {cfg.compiler};
@@ -106,7 +76,7 @@ void MultiRule::run(const Config& cfg) const try {
         cmd.push_back("-o");
         cmd.push_back(output[i]);
 
-        try_compile(cmd, cfg);
+        process_runner->run(cmd);
     }
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Running '<MultiRule> " + name + "'", get_loc());
@@ -119,30 +89,15 @@ CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Locatio
 }
 
 /** There is no condition on cleaning */
-bool CleanRule::should_run() const { return true; }
+bool CleanRule::should_run(FSGateway) const { return true; }
 
-void CleanRule::run(const Config&) const try {
-    char proc_name[] = "rm";
-    std::vector<char*> args = {proc_name};
-    args.reserve(deps.size() + 1);
-    for (const std::string& d : deps) {
-        // const_cast to deal with posix being posix :(
-        // posix_spawnp won't accept const char*
-        args.push_back(const_cast<char*>(d.data()));
-    }
-    args.push_back(nullptr);
-
-    pid_t pid;
-    int spawn_res = posix_spawnp(&pid, proc_name, nullptr, nullptr, args.data(), environ);
-    if (spawn_res != 0) {
-        throw SystemError("Clean failed for '" + qualifier + " " + name + "'");
+void CleanRule::run(const Config&, ProcessRunner* process_runner) const try {
+    std::vector<std::string> clean_cmd = {"rm"};
+    for (const auto& d : deps) {
+        clean_cmd.push_back(d);
     }
 
-    int status;
-    waitpid(pid, &status, 0);
-    if (status != 0) {
-        throw SystemError("Clean failed for '" + qualifier + " " + name + "'");
-    }
+    process_runner->run(std::move(clean_cmd));
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Running '<Clean> " + name + "'", get_loc());
 }

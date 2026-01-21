@@ -1,3 +1,6 @@
+#ifndef RULE_FACTORY_H
+#define RULE_FACTORY_H
+
 #include <memory>
 
 #include "../parsing/parser.hpp"
@@ -19,3 +22,5 @@ class RuleFactory {
 
     std::unique_ptr<CleanRule> make_clean_rule(std::string name, Value obj, Location loc) const;
 };
+
+#endif

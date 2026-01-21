@@ -6,6 +6,8 @@
 
 #include "../built_in/enums.hpp"
 #include "../errors/error.hpp"
+#include "../io/fs_gateway.hpp"
+#include "../io/proc_runner.hpp"
 #include "config.hpp"
 
 // TODO: This and the associated .cpp file could use significant refactors.
@@ -35,7 +37,7 @@ class Rule {
     virtual ~Rule() = default;
 
     /** Execute the rule (e.g. build the file if its a SingleRule, clean if its a CleanRule) */
-    virtual void run(const Config& cfg) const = 0;
+    virtual void run(const Config& cfg, ProcessRunner* process_runner) const = 0;
 
     /**
      * Determine if it's necessary to run the rule at a given time (e.g. for a SingleRule, this
@@ -46,7 +48,7 @@ class Rule {
      * if it could be called from any position, then it would have to do it's own recursive check
      * which would lead to O(n^2) runtime for the entire traversal.
      */
-    virtual bool should_run() const = 0;
+    virtual bool should_run(FSGateway fs) const = 0;
 
    protected:
     std::string qualifier;
@@ -54,23 +56,20 @@ class Rule {
     std::vector<std::string> deps;
     Location loc;
 
-    /** Attempt to run a compilation command */
-    void try_compile(std::vector<std::string>& cmd, const Config& cfg) const;
-
     /**
      * Returns true if and only if an immediate dependency's file output is newer then the 'name'
      * file
      */
-    bool has_updated_dep() const;
+    bool has_updated_dep(FSGateway fs) const;
 };
 
 class SingleRule : public Rule {
    public:
     SingleRule(std::string _name, std::vector<std::string> _deps, Step step, Location _loc);
 
-    void run(const Config& cfg) const override;
+    void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run() const override;
+    bool should_run(FSGateway fs) const override;
 
    protected:
     Step step;
@@ -81,9 +80,9 @@ class MultiRule : public Rule {
     MultiRule(std::string _name, std::vector<std::string> deps, std::vector<std::string> out,
               Step step, Location _loc);
 
-    void run(const Config& cfg) const override;
+    void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run() const override;
+    bool should_run(FSGateway fs) const override;
 
    protected:
     // The output files. For all i, output[i] will be the output file for deps[i]
@@ -95,9 +94,9 @@ class CleanRule : public Rule {
    public:
     CleanRule(std::string name, std::vector<std::string> targets, Location _loc);
 
-    void run(const Config& cfg) const override;
+    void run(const Config& cfg, ProcessRunner* process_runner) const override;
 
-    bool should_run() const override;
+    bool should_run(FSGateway fs) const override;
 };
 
 #endif

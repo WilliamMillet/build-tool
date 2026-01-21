@@ -1,7 +1,6 @@
 #include "rule_graph.hpp"
 
 #include <deque>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>

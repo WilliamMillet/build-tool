@@ -1,3 +1,5 @@
+#ifndef CONFIG_FACTORY_H
+#define CONFIG_FACTORY_H
 
 #include "../value.hpp"
 #include "config.hpp"
@@ -12,3 +14,5 @@ class ConfigFactory {
     /** Create a config based on a dictionary value object */
     Config make_config(std::string id, Value cfg_val) const;
 };
+
+#endif
