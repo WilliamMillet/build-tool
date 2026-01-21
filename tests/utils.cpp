@@ -9,10 +9,9 @@
  * Create a configuration dictionary
  * @note compiler is passed as an expr for testing non-string arguments
  */
-std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg_dict(std::unique_ptr<Expr> compiler,
-                                                                    Flags compiler_flags,
-                                                                    Flags link_flags,
-                                                                    std::string default_rule) {
+std::unique_ptr<DictionaryExpr> Factories::create_cfg_dict(std::unique_ptr<Expr> compiler,
+                                                           Flags compiler_flags, Flags link_flags,
+                                                           std::string default_rule) {
     std::unique_ptr<DictionaryExpr> cfg = std::make_unique<DictionaryExpr>();
     auto& cmap = cfg->fields_map;
 
@@ -36,7 +35,7 @@ std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg_dict(std::unique_
     return cfg;
 }
 
-std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg_dict() {
+std::unique_ptr<DictionaryExpr> Factories::create_cfg_dict() {
     return create_cfg_dict(std::make_unique<StringExpr>("clang++"), {"-Werror", "-Wall"}, {},
                            "my_rule");
 }
