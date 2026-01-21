@@ -29,7 +29,7 @@ void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const t
         raw_args.push_back(s.data());
     }
 
-    const char* compiler_arr = cfg.get_compiler().data();
+    const char* compiler_arr = cfg.compiler.data();
     pid_t proc;
     int spawn_res = posix_spawnp(&proc, compiler_arr, nullptr, nullptr, raw_args.data(), environ);
     if (spawn_res != 0) {
@@ -64,9 +64,9 @@ SingleRule::SingleRule(std::string _name, std::vector<std::string> deps, Step _s
 bool SingleRule::should_run() const { return has_updated_dep(); }
 
 void SingleRule::run(const Config& cfg) const try {
-    std::vector<std::string> cmd = {cfg.get_compiler()};
+    std::vector<std::string> cmd = {cfg.compiler};
 
-    auto& flags = (step == Step::COMPILE) ? cfg.get_compilation_flags() : cfg.get_link_flags();
+    auto& flags = (step == Step::COMPILE) ? cfg.compilation_flags : cfg.link_flags;
     for (const std::string& flag : flags) {
         cmd.push_back(flag);
     }
@@ -95,8 +95,8 @@ bool MultiRule::should_run() const { return has_updated_dep(); }
 void MultiRule::run(const Config& cfg) const try {
     // Invariant deps.size() == output.size() should be enforced in the constructor
     for (size_t i = 0; i < deps.size(); i++) {
-        std::vector<std::string> cmd = {cfg.get_compiler()};
-        auto& flags = (step == Step::COMPILE) ? cfg.get_compilation_flags() : cfg.get_link_flags();
+        std::vector<std::string> cmd = {cfg.compiler};
+        auto& flags = (step == Step::COMPILE) ? cfg.compilation_flags : cfg.link_flags;
         for (const std::string& flag : flags) {
             cmd.push_back(flag);
         }

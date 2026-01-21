@@ -2,7 +2,7 @@
 
 #include "config.hpp"
 
-std::unique_ptr<Config> ConfigFactory::make_config(std::string id, Value cfg_val) const {
+Config ConfigFactory::make_config(std::string id, Value cfg_val) const {
     cfg_val.assert_type(ValueType::Dictionary);
     Dictionary dict = cfg_val.get<Dictionary>();
     dict.assert_contains({{COMPILER_FIELD, ValueType::STRING}, {DEFAULT_FIELD, ValueType::STRING}});
@@ -28,6 +28,6 @@ std::unique_ptr<Config> ConfigFactory::make_config(std::string id, Value cfg_val
         default_rule = dict.get(DEFAULT_FIELD).get<std::string>();
     }
 
-    return std::make_unique<Config>(std::move(id), std::move(compiler), std::move(default_rule),
-                                    std::move(compilation_flags), std::move(link_flags));
+    return {std::move(id), std::move(compiler), std::move(compilation_flags), std::move(link_flags),
+            std::move(default_rule)};
 }

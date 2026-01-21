@@ -1,6 +1,4 @@
 
-#include <memory>
-
 #include "../value.hpp"
 #include "config.hpp"
 
@@ -12,5 +10,5 @@ class ConfigFactory {
     inline const static std::string DEFAULT_FIELD = "default_rule";
 
     /** Create a config based on a dictionary value object */
-    std::unique_ptr<Config> make_config(std::string id, Value cfg_val) const;
+    Config make_config(std::string id, Value cfg_val) const;
 };

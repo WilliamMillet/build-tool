@@ -1,6 +1,7 @@
 #include "variable_evaluator.hpp"
 
 #include <deque>
+#include <memory>
 #include <ranges>
 #include <string>
 #include <unordered_map>
@@ -128,7 +129,7 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
                 var.loc);
         }
         ConfigFactory fac;
-        cfg = fac.make_config(var.identifier, val);
+        cfg = std::make_unique<Config>(fac.make_config(var.identifier, val));
     } else if (var.category != VarCategory::REGULAR) {
         RuleFactory fac;
         rules.push_back(fac.make_rule(var.identifier, val, var.loc, var.category));

@@ -44,10 +44,10 @@ TEST_CASE("Config only with no variables evaluates correctly", "[variable_evalua
 
     REQUIRE(dicts.rules.size() == 0);
 
-    REQUIRE(dicts.cfg.get_compiler() == "clang++");
-    REQUIRE(dicts.cfg.get_compilation_flags() == c_flags);
-    REQUIRE(dicts.cfg.get_link_flags() == l_flags);
-    REQUIRE(dicts.cfg.get_default_rule() == default_rule);
+    REQUIRE(dicts.cfg.compiler == "clang++");
+    REQUIRE(dicts.cfg.compilation_flags == c_flags);
+    REQUIRE(dicts.cfg.link_flags == l_flags);
+    REQUIRE(dicts.cfg.default_rule == default_rule);
 }
 
 TEST_CASE("Config can be based on simple variable dependencies", "[variable_evaluator]") {
@@ -64,8 +64,8 @@ TEST_CASE("Config can be based on simple variable dependencies", "[variable_eval
 
     QualifiedDicts dicts = evaluator.evaluate();
 
-    REQUIRE(dicts.cfg.get_name() == "cfg");
-    REQUIRE(dicts.cfg.get_compiler() == "gcc");
+    REQUIRE(dicts.cfg.name == "cfg");
+    REQUIRE(dicts.cfg.compiler == "gcc");
 }
 
 TEST_CASE("Test complex variable dependency DAG", "[variable_evaluator]") {
@@ -111,7 +111,7 @@ TEST_CASE("Test complex variable dependency DAG", "[variable_evaluator]") {
     VariableEvaluator evaluator(std::move(vars), FuncRegistry());
     QualifiedDicts dicts = evaluator.evaluate();
 
-    REQUIRE(dicts.cfg.get_compiler() == "FooBarBar");
+    REQUIRE(dicts.cfg.compiler == "FooBarBar");
 }
 
 TEST_CASE("Rule parses correctly", "[variable_evaluator]") {
