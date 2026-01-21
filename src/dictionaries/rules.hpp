@@ -20,6 +20,7 @@ enum class RuleType { SINGLE, MULTI, CLEAN };
 namespace RuleFields {
 inline constexpr static std::string NAME = "name";
 inline constexpr static std::string STEP = "step";
+inline constexpr static std::string DEPS = "deps";
 inline constexpr static std::string OUTPUT = "output";
 inline constexpr static std::string TARGETS = "targets";
 }  // namespace RuleFields

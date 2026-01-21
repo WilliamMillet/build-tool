@@ -19,5 +19,8 @@ namespace Factories {
 std::unique_ptr<DictionaryExpr> create_cfg(std::unique_ptr<Expr> compiler, Flags compiler_flags,
                                            Flags link_flags, std::string default_rule);
 
+/** No arg overload of create_cfg for when less control is required */
+std::unique_ptr<DictionaryExpr> create_cfg();
+
 }  // namespace Factories
 }  // namespace Testing

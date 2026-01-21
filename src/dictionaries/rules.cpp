@@ -59,9 +59,9 @@ SingleRule::SingleRule(std::string _name, Value obj, Location _loc) try
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains(
-        {{RuleFields::NAME, ValueType::STRING}, {RuleFields::STEP, ValueType::ENUM}});
+        {{RuleFields::DEPS, ValueType::LIST}, {RuleFields::STEP, ValueType::ENUM}});
 
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
+    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
     step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Constructing '<Rule> " + _name + "'", _loc);
@@ -93,11 +93,11 @@ MultiRule::MultiRule(std::string _name, Value obj, Location _loc) try
     : Rule("MultiRule", std::move(_name), _loc) {
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
-    dict.assert_contains({{"deps", ValueType::LIST},
+    dict.assert_contains({{RuleFields::DEPS, ValueType::LIST},
                           {RuleFields::OUTPUT, ValueType::LIST},
                           {RuleFields::STEP, ValueType::ENUM}});
 
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
+    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
     output = ValueUtils::vectorise<std::string>(dict.get(RuleFields::OUTPUT).get<ValueList>());
 
     if (deps.size() != output.size()) {
@@ -136,7 +136,7 @@ CleanRule::CleanRule(std::string _name, Value obj, Location _loc) try
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
-    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::NAME).get<ValueList>());
+    deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::TARGETS).get<ValueList>());
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Constructing '<Clean> " + _name + "'", _loc);
 }

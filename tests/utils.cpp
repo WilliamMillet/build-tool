@@ -32,3 +32,7 @@ std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg(std::unique_ptr<E
 
     return cfg;
 }
+
+std::unique_ptr<DictionaryExpr> Testing::Factories::create_cfg() {
+    return create_cfg(std::make_unique<StringExpr>("clang++"), {"-Werror", "-Wall"}, {}, "my_rule");
+}

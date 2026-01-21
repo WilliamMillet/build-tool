@@ -122,8 +122,9 @@ void Error::update_and_throw(std::exception& excep, std::string ctx, Location lo
         err->set_what_str(err->format());
         throw;
     } else {
-        err->set_what_str(excep.what());
-        throw UnknownError(excep, ctx, loc);
+        UnknownError unknown_err{excep, ctx};
+        unknown_err.set_what_str(excep.what());
+        throw unknown_err;
     }
 }
 
