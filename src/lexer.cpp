@@ -3,7 +3,7 @@
 #include <cctype>
 
 #include "errors/error.hpp"
-#include "file_utils.hpp"
+#include "io/file_utils.hpp"
 
 Lexer::Lexer(const std::string input) { src = FileUtils::read_all(input); }
 

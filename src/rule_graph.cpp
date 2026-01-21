@@ -23,7 +23,6 @@ RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) try {
 }
 
 bool RuleGraph::cyclical_dep_exists() const try {
-    std::cout << "Looking for cyclical dependency" << std::endl;
     // Topological sort used for cycle detection. Operates on the subset of the graph where only
     // recipe nodes remain (no files)
     std::unordered_map<std::string, int> indegree;

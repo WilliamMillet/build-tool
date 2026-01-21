@@ -28,6 +28,7 @@ void Rule::try_compile(std::vector<std::string>& cmd, const Config& cfg) const t
     for (std::string& s : cmd) {
         raw_args.push_back(s.data());
     }
+    raw_args.push_back(nullptr);
 
     const char* compiler_arr = cfg.compiler.data();
     pid_t proc;
@@ -129,6 +130,7 @@ void CleanRule::run(const Config&) const try {
         // posix_spawnp won't accept const char*
         args.push_back(const_cast<char*>(d.data()));
     }
+    args.push_back(nullptr);
 
     pid_t pid;
     int spawn_res = posix_spawnp(&pid, proc_name, nullptr, nullptr, args.data(), environ);

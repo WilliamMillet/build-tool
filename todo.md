@@ -22,6 +22,7 @@
 - Test more error cases. Not necessary the specific error, but I should check an error for cases like
     - Unclosed parenthesis
     - Unknown lexing identifier
+- Ctrl f to find all todos across codebase
 
 # REALLY GOOD IDEAS
 - Have a cache of the file data. If the build file didnt change between runs, I can just used the cache stuff

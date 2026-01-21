@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "../file_utils.hpp"
+#include "../io/file_utils.hpp"
 
 size_t Location::line_start() const { return file_idx - col_no; }
 
