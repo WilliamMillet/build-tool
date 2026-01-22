@@ -1,0 +1,11 @@
+<Config> cfg {
+    compiler = "clang++"
+    compilation_flags = ["-g", "-Wall"]
+    link_flags = []
+    default = "app" # This is the equivalent of 'all' from make
+}
+
+<Rule> compilation {
+    deps = 
+    step = Step::Compile
+}
