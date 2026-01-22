@@ -5,7 +5,7 @@
 #include "sys/wait.h"
 #include "unistd.h"
 
-int PosixProcSpawner::run(std::vector<std::string> cmd) try {
+int PosixProcSpawner::run(std::vector<std::string>& cmd) try {
     std::vector<char*> raw_args;
     raw_args.reserve(cmd.size());
     for (std::string& s : cmd) {
@@ -31,7 +31,7 @@ int PosixProcSpawner::run(std::vector<std::string> cmd) try {
     Error::update_and_throw(excep, "Executing command via POSIX spawn");
 }
 
-std::string PosixProcSpawner::cmd_str(std::vector<std::string>& cmd) const {
+std::string PosixProcSpawner::cmd_str(const std::vector<std::string>& cmd) const {
     std::string str;
     for (const std::string& tok : cmd) {
         if (!str.empty()) {

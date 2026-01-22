@@ -7,14 +7,16 @@
 #include "../built_in/enums.hpp"
 #include "../errors/error.hpp"
 #include "../io/fs_gateway.hpp"
-#include "../io/proc_spawner.hpp"
 #include "config.hpp"
 
 // TODO: This and the associated .cpp file could use significant refactors.
 //  - Once I have better error handling which shows the snippet, I won't need the string constructor
 // his would clean my code up
 //  - Once I improve the Value interface I can simplify the constructors for this significantly
-//  - Revaluate which getters need to be exposed here
+//  - Revaluate which getters need to be exposed her
+//
+
+using Command = std::vector<std::string>;
 
 enum class RuleType { SINGLE, MULTI, CLEAN };
 
@@ -36,8 +38,8 @@ class Rule {
 
     virtual ~Rule() = default;
 
-    /** Execute the rule (e.g. build the file if its a SingleRule, clean if its a CleanRule) */
-    virtual void run(const Config& cfg, ProcessRunner* process_runner) const = 0;
+    /** Get the executable commands associated with a rule*/
+    virtual std::vector<Command> get_commands(const Config& cfg) const;
 
     /**
      * Determine if it's necessary to run the rule at a given time (e.g. for a SingleRule, this
@@ -67,7 +69,7 @@ class SingleRule : public Rule {
    public:
     SingleRule(std::string _name, std::vector<std::string> _deps, Step step, Location _loc);
 
-    void run(const Config& cfg, ProcessRunner* process_runner) const override;
+    std::vector<Command> get_commands(const Config& cfg) const override;
 
     bool should_run(FSGateway& fs) const override;
 
@@ -80,7 +82,7 @@ class MultiRule : public Rule {
     MultiRule(std::string _name, std::vector<std::string> deps, std::vector<std::string> out,
               Step step, Location _loc);
 
-    void run(const Config& cfg, ProcessRunner* process_runner) const override;
+    std::vector<Command> get_commands(const Config& cfg) const override;
 
     bool should_run(FSGateway& fs) const override;
 
@@ -94,7 +96,7 @@ class CleanRule : public Rule {
    public:
     CleanRule(std::string name, std::vector<std::string> targets, Location _loc);
 
-    void run(const Config& cfg, ProcessRunner* process_runner) const override;
+    std::vector<Command> get_commands(const Config& cfg) const override;
 
     bool should_run(FSGateway& fs) const override;
 };

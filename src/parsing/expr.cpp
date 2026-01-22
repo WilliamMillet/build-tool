@@ -1,6 +1,5 @@
 #include "expr.hpp"
 
-#include <iostream>
 #include <memory>
 #include <ranges>
 #include <string>

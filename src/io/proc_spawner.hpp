@@ -8,15 +8,15 @@
 class ProcessRunner {
    public:
     /** Use a command to run a process and forward the return value */
-    virtual int run(std::vector<std::string> cmd);
+    virtual int run(std::vector<std::string>& cmd);
 };
 
 class PosixProcSpawner : public ProcessRunner {
    public:
-    int run(std::vector<std::string> cmd) override;
+    int run(std::vector<std::string>& cmd) override;
 
    private:
-    std::string cmd_str(std::vector<std::string>& cmd) const;
+    std::string cmd_str(const std::vector<std::string>& cmd) const;
 };
 
 #endif

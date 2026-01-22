@@ -1,5 +1,4 @@
 #include "catch.hpp"
-#include "src/dictionaries/rule_factory.hpp"
 #include "src/dictionaries/rules.hpp"
 #include "src/rule_graph.hpp"
 #include "utils.hpp"

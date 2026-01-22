@@ -32,7 +32,7 @@
 // }
 //
 // class ProcessRunner {
-//  virtual int run(std::vector<std::string> cmd);
+//  virtual int run(const std::vector<std::string>& cmd);
 // }
 // class PosixRunner : public ProcessRunner {
 //     // Override run by actually running the process

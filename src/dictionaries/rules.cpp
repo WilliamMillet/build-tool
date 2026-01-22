@@ -32,9 +32,7 @@ SingleRule::SingleRule(std::string _name, std::vector<std::string> deps, Step _s
     Error::update_and_throw(excep, "Constructing '<Rule> " + _name + "'", _loc);
 }
 
-bool SingleRule::should_run(FSGateway& fs) const { return has_updated_dep(fs); }
-
-void SingleRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
+std::vector<Command> SingleRule::get_commands(const Config& cfg) const try {
     std::vector<std::string> cmd = {cfg.compiler};
 
     auto& flags = (step == Step::COMPILE) ? cfg.compilation_flags : cfg.link_flags;
@@ -49,10 +47,12 @@ void SingleRule::run(const Config& cfg, ProcessRunner* process_runner) const try
     cmd.push_back("-o");
     cmd.push_back(name);
 
-    process_runner->run(cmd);
+    return {cmd};
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Running '<Rule> " + name + "'", get_loc());
+    Error::update_and_throw(excep, "Building command for '<Rule> " + name + "'", loc);
 }
+
+bool SingleRule::should_run(FSGateway& fs) const { return has_updated_dep(fs); }
 
 MultiRule::MultiRule(std::string _name, std::vector<std::string> _deps,
                      std::vector<std::string> _out, Step _step, Location _loc) try
@@ -63,8 +63,8 @@ MultiRule::MultiRule(std::string _name, std::vector<std::string> _deps,
 
 bool MultiRule::should_run(FSGateway& fs) const { return has_updated_dep(fs); }
 
-void MultiRule::run(const Config& cfg, ProcessRunner* process_runner) const try {
-    // Invariant deps.size() == output.size() should be enforced in the constructor
+std::vector<Command> MultiRule::get_commands(const Config& cfg) const try {
+    std::vector<Command> cmds;
     for (size_t i = 0; i < deps.size(); i++) {
         std::vector<std::string> cmd = {cfg.compiler};
         auto& flags = (step == Step::COMPILE) ? cfg.compilation_flags : cfg.link_flags;
@@ -76,10 +76,12 @@ void MultiRule::run(const Config& cfg, ProcessRunner* process_runner) const try 
         cmd.push_back("-o");
         cmd.push_back(output[i]);
 
-        process_runner->run(cmd);
+        cmds.push_back(cmd);
     }
+
+    return cmds;
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Running '<MultiRule> " + name + "'", get_loc());
+    Error::update_and_throw(excep, "Building command for '<MultiRule> " + name + "'", loc);
 }
 
 CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Location _loc) try
@@ -88,16 +90,16 @@ CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Locatio
     Error::update_and_throw(excep, "Constructing '<Clean> " + name + "'", _loc);
 }
 
-/** There is no condition on cleaning */
-bool CleanRule::should_run(FSGateway&) const { return true; }
-
-void CleanRule::run(const Config&, ProcessRunner* process_runner) const try {
+std::vector<Command> CleanRule::get_commands(const Config&) const try {
     std::vector<std::string> clean_cmd = {"rm"};
     for (const auto& d : deps) {
         clean_cmd.push_back(d);
     }
 
-    process_runner->run(std::move(clean_cmd));
+    return {clean_cmd};
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Running '<Clean> " + name + "'", get_loc());
+    Error::update_and_throw(excep, "Building command for '<Clean> " + name + "'", loc);
 }
+
+/** There is no condition on cleaning */
+bool CleanRule::should_run(FSGateway&) const { return true; }

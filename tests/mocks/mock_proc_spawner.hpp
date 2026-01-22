@@ -10,7 +10,7 @@ class MockProcSpawner : public ProcessRunner {
    public:
     MockProcSpawner(MockFsGateway* mock_fs);
 
-    int run(std::vector<std::string> cmd) override;
+    int run(std::vector<std::string>& cmd) override;
 
    private:
     MockFsGateway* fs;
