@@ -5,13 +5,15 @@
 #include <vector>
 
 /** Interface between program and processes. Primarily useful for enabling dependency injection */
-class ProcessRunner {
+class ProcessSpawner {
    public:
+    virtual ~ProcessSpawner() = default;
+
     /** Use a command to run a process and forward the return value */
-    virtual int run(std::vector<std::string>& cmd);
+    virtual int run(std::vector<std::string>& cmd) = 0;
 };
 
-class PosixProcSpawner : public ProcessRunner {
+class PosixProcSpawner : public ProcessSpawner {
    public:
     int run(std::vector<std::string>& cmd) override;
 

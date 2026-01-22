@@ -2,7 +2,7 @@
 
 #include "errors/error.hpp"
 
-RuleRunner::RuleRunner(RuleGraph rule_graph, Config cfg, ProcessRunner* proc_runner,
+RuleRunner::RuleRunner(RuleGraph rule_graph, Config cfg, ProcessSpawner* proc_runner,
                        FSGateway* fs_gw)
     : graph(std::move(rule_graph)),
       config(std::move(cfg)),

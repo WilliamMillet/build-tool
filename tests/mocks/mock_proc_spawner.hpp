@@ -6,7 +6,7 @@
 #include "mock_fs_gateway.hpp"
 #include "src/io/proc_spawner.hpp"
 
-class MockProcSpawner : public ProcessRunner {
+class MockProcSpawner : public ProcessSpawner {
    public:
     MockProcSpawner(MockFsGateway* mock_fs);
 

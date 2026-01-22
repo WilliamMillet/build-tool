@@ -11,7 +11,7 @@ struct MockFileEntry {
 };
 
 /** Mock FSGateway that works in memory with file modification logs */
-class MockFsGateway : FSGateway {
+class MockFsGateway : public FSGateway {
    public:
     bool exists(std::string filename) const override;
 

@@ -12,7 +12,7 @@ using Visited = std::unordered_set<std::string>;
 
 class RuleRunner {
    public:
-    RuleRunner(RuleGraph rule_graph, Config cfg, ProcessRunner* proc_spawner, FSGateway* fs_gw);
+    RuleRunner(RuleGraph rule_graph, Config cfg, ProcessSpawner* proc_spawner, FSGateway* fs_gw);
 
     /** Run a specified user rule */
     void run_rule(const std::string& rule_name) const;
@@ -20,7 +20,7 @@ class RuleRunner {
    private:
     RuleGraph graph;
     Config config;
-    ProcessRunner* process_runner;
+    ProcessSpawner* process_runner;
     FSGateway* fs_gateway;
 
     /** Recursive helper for run_rule */

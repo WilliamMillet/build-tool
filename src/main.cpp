@@ -1,9 +1,12 @@
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 #include "built_in/func_registry.hpp"
 #include "dictionaries/qualified_dicts.hpp"
 #include "errors/error.hpp"
+#include "io/fs_gateway.hpp"
+#include "io/proc_spawner.hpp"
 #include "lexer.hpp"
 #include "parsing/parser.hpp"
 #include "rule_graph.hpp"
@@ -26,7 +29,9 @@ int main(int argc, char** argv) {
         VariableEvaluator evaluator(std::move(parsed), fn_reg);
         QualifiedDicts qualifiers = evaluator.evaluate();
         RuleGraph graph(std::move(qualifiers.rules));
-        RuleRunner runner(std::move(graph), std::move(qualifiers.cfg));
+        std::unique_ptr<ProcessSpawner> spawner = std::make_unique<PosixProcSpawner>();
+        std::unique_ptr<FSGateway> fs = std::make_unique<ProdFSGateway>();
+        RuleRunner runner(std::move(graph), std::move(qualifiers.cfg), spawner.get(), fs.get());
     } catch (const Error& err) {
         std::cerr << err.format(src) << std::endl;
     } catch (const std::exception& err) {

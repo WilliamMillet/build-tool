@@ -39,7 +39,7 @@ class Rule {
     virtual ~Rule() = default;
 
     /** Get the executable commands associated with a rule*/
-    virtual std::vector<Command> get_commands(const Config& cfg) const;
+    virtual std::vector<Command> get_commands(const Config& cfg) const = 0;
 
     /**
      * Determine if it's necessary to run the rule at a given time (e.g. for a SingleRule, this

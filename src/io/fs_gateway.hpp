@@ -7,13 +7,13 @@
 /** Interface between program and file system. Primarily useful for enabling dependency injection */
 class FSGateway {
    public:
-    ~FSGateway() = default;
+    virtual ~FSGateway() = default;
 
-    virtual bool exists(std::string filename) const;
+    virtual bool exists(std::string filename) const = 0;
 
-    virtual std::filesystem::file_time_type last_write_time(std::string filename) const;
+    virtual std::filesystem::file_time_type last_write_time(std::string filename) const = 0;
 
-    virtual void touch(std::string filename);
+    virtual void touch(std::string filename) = 0;
 };
 
 /** FS Gateway to use in production that interacts with the real filesystem */
