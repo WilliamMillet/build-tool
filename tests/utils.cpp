@@ -5,6 +5,8 @@
 #include "src/dictionaries/config_factory.hpp"
 #include "src/parsing/expr.hpp"
 
+using namespace std::chrono_literals;
+
 /**
  * Create a configuration dictionary
  * @note compiler is passed as an expr for testing non-string arguments
@@ -39,3 +41,10 @@ std::unique_ptr<DictionaryExpr> Factories::create_cfg_dict() {
     return create_cfg_dict(std::make_unique<StringExpr>("clang++"), {"-Werror", "-Wall"}, {},
                            "my_rule");
 }
+
+std::filesystem::file_time_type Time::past() {
+    return std::filesystem::file_time_type::clock::now() - 10s;
+};
+std::filesystem::file_time_type Time::future() {
+    return std::filesystem::file_time_type::clock::now() + 10s;
+};

@@ -38,5 +38,9 @@ RuleGraph create_graph(std::unordered_map<std::string, std::string> adj_list) {
 
     return rules;
 };
-
 }  // namespace Factories
+
+namespace Time {
+std::filesystem::file_time_type past();
+std::filesystem::file_time_type future();
+}  // namespace Time
