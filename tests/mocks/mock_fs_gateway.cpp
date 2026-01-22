@@ -25,6 +25,15 @@ void MockFsGateway::touch_at(std::string filename, std::filesystem::file_time_ty
         name_to_file[filename] = MockFileEntry{filename, time, 0};
     } else {
         name_to_file[filename].last_write_time = std::chrono::file_clock::now();
-        name_to_file[filename].modification_count++;
+        name_to_file[filename].write_count++;
     }
+}
+
+size_t MockFsGateway::get_write_count(std::string filename) {
+    auto entry = name_to_file.find(filename);
+    if (entry == name_to_file.end()) {
+        throw std::invalid_argument("Cannot get write count of '" + filename + "'");
+    }
+
+    return entry->second.write_count;
 }

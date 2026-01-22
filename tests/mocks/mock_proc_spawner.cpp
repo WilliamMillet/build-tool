@@ -1,6 +1,7 @@
 #include "mock_proc_spawner.hpp"
 
-MockProcSpawner::MockProcSpawner(MockFsGateway* mock_fs) : fs(mock_fs) {};
+MockProcSpawner::MockProcSpawner(std::shared_ptr<MockFsGateway> mock_fs)
+    : fs(std::move(mock_fs)), run_count(0) {};
 
 int MockProcSpawner::run(std::vector<std::string>& cmd) {
     auto out_prefix = std::ranges::find(cmd, "-o");
@@ -14,5 +15,9 @@ int MockProcSpawner::run(std::vector<std::string>& cmd) {
 
     fs->touch(*out_prefix);
 
+    run_count++;
+
     return 0;
 }
+
+size_t MockProcSpawner::get_run_count() const { return run_count; }

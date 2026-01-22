@@ -23,15 +23,19 @@ int main(int argc, char** argv) {
     try {
         Lexer lexer{src};
         std::vector<Lexeme> lexed = lexer.lex();
+
         Parser parser(lexed);
         std::vector<ParsedVariable> parsed = parser.parse();
+
         FuncRegistry fn_reg;
         VariableEvaluator evaluator(std::move(parsed), fn_reg);
         QualifiedDicts qualifiers = evaluator.evaluate();
-        RuleGraph graph(std::move(qualifiers.rules));
-        std::unique_ptr<ProcessSpawner> spawner = std::make_unique<PosixProcSpawner>();
-        std::unique_ptr<FSGateway> fs = std::make_unique<ProdFSGateway>();
-        RuleRunner runner(std::move(graph), std::move(qualifiers.cfg), spawner.get(), fs.get());
+
+        std::shared_ptr<RuleGraph> graph = std::make_shared<RuleGraph>(std::move(qualifiers.rules));
+        std::shared_ptr<ProcessSpawner> spawner = std::make_unique<PosixProcSpawner>();
+        std::shared_ptr<FSGateway> fs = std::make_unique<ProdFSGateway>();
+        RuleRunner runner(graph, std::make_shared<Config>(qualifiers.cfg), std::move(spawner),
+                          std::move(fs));
     } catch (const Error& err) {
         std::cerr << err.format(src) << std::endl;
     } catch (const std::exception& err) {

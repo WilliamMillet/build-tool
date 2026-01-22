@@ -1,7 +1,8 @@
+HIGH PRIORITY
+- Have it so clean only works if the file dosent exist
+
 - String quote escaping
-- Cleaner error messages. Maybe show the actual line when throwing the error
 - Look into better ways to throw exceptions without swallowing up stuff like exception type.
-- Maybe I could have my own Python-like exception hierachy with name error, index error, etc
 - Possibly change Value to be more polymorphic and more open closed
 - Move all variables for classes to private for encapsulatory purposes
 - Add @exception to the function comments maybe
