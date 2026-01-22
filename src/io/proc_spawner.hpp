@@ -1,5 +1,5 @@
-#ifndef PROC_RUNNER_H
-#define PROC_RUNNER_H
+#ifndef proc_spawner_H
+#define proc_spawner_H
 
 #include <string>
 #include <vector>
@@ -7,10 +7,11 @@
 /** Interface between program and processes. Primarily useful for enabling dependency injection */
 class ProcessRunner {
    public:
+    /** Use a command to run a process and forward the return value */
     virtual int run(std::vector<std::string> cmd);
 };
 
-class PosixProcRunner : public ProcessRunner {
+class PosixProcSpawner : public ProcessRunner {
    public:
     int run(std::vector<std::string> cmd) override;
 

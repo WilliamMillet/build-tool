@@ -1,11 +1,11 @@
-#include "proc_runner.hpp"
+#include "proc_spawner.hpp"
 
 #include "../errors/error.hpp"
 #include "spawn.h"
 #include "sys/wait.h"
 #include "unistd.h"
 
-int PosixProcRunner::run(std::vector<std::string> cmd) try {
+int PosixProcSpawner::run(std::vector<std::string> cmd) try {
     std::vector<char*> raw_args;
     raw_args.reserve(cmd.size());
     for (std::string& s : cmd) {
@@ -31,7 +31,7 @@ int PosixProcRunner::run(std::vector<std::string> cmd) try {
     Error::update_and_throw(excep, "Executing command via POSIX spawn");
 }
 
-std::string PosixProcRunner::cmd_str(std::vector<std::string>& cmd) const {
+std::string PosixProcSpawner::cmd_str(std::vector<std::string>& cmd) const {
     std::string str;
     for (const std::string& tok : cmd) {
         if (!str.empty()) {

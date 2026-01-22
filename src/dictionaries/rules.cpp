@@ -21,7 +21,7 @@ bool Rule::has_updated_dep(FSGateway& fs) const {
 
     auto target_write_t = fs.last_write_time(name);
     return std::ranges::any_of(deps, [&](std::string d) {
-        return !fs.exists(d) || fs.last_write_time(d) >= target_write_t;
+        return !fs.exists(d) || fs.last_write_time(d) > target_write_t;
     });
 }
 

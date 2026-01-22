@@ -7,7 +7,7 @@
 #include "../built_in/enums.hpp"
 #include "../errors/error.hpp"
 #include "../io/fs_gateway.hpp"
-#include "../io/proc_runner.hpp"
+#include "../io/proc_spawner.hpp"
 #include "config.hpp"
 
 // TODO: This and the associated .cpp file could use significant refactors.
