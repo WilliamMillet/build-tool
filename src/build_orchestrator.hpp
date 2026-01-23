@@ -11,11 +11,11 @@ class BuildOrchestrator {
    public:
     /** Creates the final runner by executing the pipeline from lexing to graph creation */
     BuildOrchestrator(std::shared_ptr<FSGateway> fs, std::shared_ptr<ProcessSpawner> spawner,
-                      std::string src_filename);
+                      std::string src_file);
 
     void setup();
 
-    void run_command(std::string cmd) const;
+    void run_rule(std::string cmd) const;
 
    private:
     std::string src_filename;

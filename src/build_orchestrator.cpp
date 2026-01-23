@@ -16,8 +16,10 @@
 
 BuildOrchestrator::BuildOrchestrator(std::shared_ptr<FSGateway> fs,
                                      std::shared_ptr<ProcessSpawner> spawner,
-                                     std::string src_filename) try {
-    Lexer lexer{src_filename};
+                                     std::string src_file) try {
+    src_filename = src_file;
+
+    Lexer lexer{src_file};
     std::vector<Lexeme> lexed = lexer.lex();
 
     Parser parser(lexed);
@@ -31,12 +33,12 @@ BuildOrchestrator::BuildOrchestrator(std::shared_ptr<FSGateway> fs,
     runner =
         std::make_unique<RuleRunner>(graph, std::make_shared<Config>(qualifiers.cfg), spawner, fs);
 } catch (const Error& err) {
-    std::cerr << err.format(src_filename) << std::endl;
+    std::cerr << err.format(src_file) << std::endl;
 } catch (const std::exception& err) {
-    std::cerr << "Failed to parse '" << src_filename << "' Error: " << err.what() << std::endl;
+    std::cerr << "Failed to parse '" << src_file << "' Error: " << err.what() << std::endl;
 }
 
-void BuildOrchestrator::run_command(std::string cmd) const try {
+void BuildOrchestrator::run_rule(std::string cmd) const try {
     runner->run_rule(cmd);
 } catch (const Error& err) {
     std::cerr << err.format(src_filename) << std::endl;
