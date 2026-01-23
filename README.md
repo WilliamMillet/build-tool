@@ -298,7 +298,7 @@ function run_rule(id, visited):
 ```
 The execution function is virtually defined on the Rule base class. For `<Rule>` and `<MultiRule>` it uses the POSIX spawn API to spawn the users desired compiler process and run there desired command in accordance with the `<Config>` they set. For `<Clean>`, it uses POSIX spawn to use run the `rm` command.
 
-# Requirements
-The tool only works on a POSIX-compliant OS with Unix utilities like `rm`
+## Miscellaneous Notes
+- The GitHub languages overview claiming 'Befunge' is used in the project is not correct. It's just that both Befunge and this project use the `.bf` file extension. 
 
 # More features coming soon :)
