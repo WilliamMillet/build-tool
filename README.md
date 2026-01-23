@@ -102,7 +102,7 @@ The config qualifier allows you tp specify information about your project which 
 | **compiler** | String | No | The compiler you wish to compile your project with |
 | **compilation_flags** | List[String] | Yes | The flags that should be set during compilation |
 | **link_flags** | List[String] | Yes | The flags that should be set during linking. |
-| **default** | String | No | The default rule to run if nothing is specified |
+| **default** | String | No | The default rule to run if nothing is specified. Note that this must be a string representation of the rule, not the actual rule variable. |
 
 ### `<Rule>`
 A Rule is a structure that represents a single build command. The name of the output will be the name of the rule. In the example case below, this would be `app`:
@@ -183,6 +183,35 @@ There is a logical issue with the program. E.g. cyclical dependencies.
 External error related to the system itself like a process failing to spawn. The message associated with the `errno` macro value at the time of construction will be used in addition to any user provided message.
 ## Optimisation
 The runner is designed to follow an incremental compilation model, where compilation will only be performed if changes were made to a direct or indirect dependency of a rule. This is determined by checking dependencies and recursively checking all of there dependencies, comparing file write timestamps at each step.
+
+## Setup
+### Requirements
+- Unix-like environment with standard utils like `rm`
+- Cmake
+- Clang
+### Instructions
+#### Setup
+1. `cmake -B build`
+2. `cd build`
+3. `make`
+#### Execution
+- `./my_make`
+
+## Demo
+A demo can be found in the `demo` directory containing a simple example of a build file and it's associated dependencies.
+You can run the `app` command in the build file by the following:
+```
+../build/my_make Buildfile.bf app
+```
+Running the `app` output should then yield
+```
+This is a demo
+```
+The result can be cleaned with the clean command
+```
+../build/my_make Buildfile.bf clean
+```
+
 ## Technical Design Overview
 The architecture follows a processing pipeline, consisting of the following high level operations:
 - Lexing

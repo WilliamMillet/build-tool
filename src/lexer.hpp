@@ -69,7 +69,7 @@ class Lexer {
          {EQUALS_CHAR, LexemeType::EQUALS},
          {ADD_CHAR, LexemeType::ADD}}};
 
-    constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile";
+    constexpr static std::string DEFAULT_SRC_FILE_NAME = "Buildfile.bf";
     std::string src;
     Location loc{.line_no = 1, .col_no = 1, .file_idx = 0};
 
