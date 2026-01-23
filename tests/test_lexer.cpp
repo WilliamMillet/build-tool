@@ -1,18 +1,12 @@
-#include <filesystem>
 #include <vector>
 
 #include "../catch.hpp"
 #include "../src/lexer.hpp"
 #include "src/errors/error.hpp"
-
-inline const std::string TEST_DATA_DIR = "../tests/data/files";
-
-std::filesystem::path get_path(std::string file) {
-    return std::filesystem::path(TEST_DATA_DIR + "/" + file);
-}
+#include "utils.hpp"
 
 TEST_CASE("Empty file has only a single EOF lexeme", "[lexer]") {
-    Lexer lexer(get_path("Empty.bf"));
+    Lexer lexer(IO::get_test_file_path("Empty.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
     REQUIRE(lexemes.size() == 1);
 
@@ -49,7 +43,7 @@ std::vector<Lexeme> simple_var_exp = {
     {LexemeType::END_OF_FILE, "", {4, 1, 76}}};
 
 TEST_CASE("Lex simple variables", "[lexer]") {
-    Lexer lexer(get_path("SimpleVariables.bf"));
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
 
     REQUIRE(lexemes.size() == simple_var_exp.size());
@@ -139,7 +133,7 @@ std::vector<Lexeme> complex_cfg_exp = {
     {LexemeType::END_OF_FILE, "", {12, 2, 263}}};
 
 TEST_CASE("Lex simple dictionaries", "[lexer]") {
-    Lexer lexer(get_path("SimpleDicts.bf"));
+    Lexer lexer(IO::get_test_file_path("SimpleDicts.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
 
     REQUIRE(lexemes.size() == complex_cfg_exp.size());
@@ -235,7 +229,7 @@ std::vector<Lexeme> strange_data_exp = {
     {LexemeType::END_OF_FILE, "", {12, 2, 243}}};
 
 TEST_CASE("Lex strange data", "[lexer]") {
-    Lexer lexer(get_path("LexingEdgeCases.bf"));
+    Lexer lexer(IO::get_test_file_path("LexingEdgeCases.bf"));
     std::vector<Lexeme> lexemes = lexer.lex();
 
     REQUIRE(lexemes.size() == strange_data_exp.size());
@@ -251,4 +245,289 @@ TEST_CASE("Lex strange data", "[lexer]") {
         REQUIRE(got.loc == exp.loc);
         REQUIRE(got.value == exp.value);
     }
+}
+
+// Tests for lexeme edge cases
+
+TEST_CASE("Lexer handles multiple newlines", "[lexer][edge_cases]") {
+    Lexer lexer(IO::get_test_file_path("LexingEdgeCases.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    // Should not crash and should produce valid output
+    REQUIRE(!lexemes.empty());
+    REQUIRE(lexemes.back().type == LexemeType::END_OF_FILE);
+}
+
+TEST_CASE("Lexer strips comments correctly", "[lexer][comments]") {
+    // Comments should not appear in lexeme output
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    for (const auto& lex : lexemes) {
+        // No lexeme should contain comment text
+        REQUIRE(lex.value.find("Should be ignored") == std::string::npos);
+    }
+}
+
+// Tests for lexeme types
+
+TEST_CASE("Lexer identifies all token types", "[lexer][types]") {
+    Lexer lexer(IO::get_test_file_path("SimpleDicts.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    bool has_qualifier = false;
+    bool has_identifier = false;
+    bool has_block_start = false;
+    bool has_block_end = false;
+    bool has_equals = false;
+    bool has_string = false;
+    bool has_newline = false;
+    bool has_eof = false;
+
+    for (const auto& lex : lexemes) {
+        switch (lex.type) {
+            case LexemeType::DICT_QUALIFIER:
+                has_qualifier = true;
+                break;
+            case LexemeType::IDENTIFIER:
+                has_identifier = true;
+                break;
+            case LexemeType::BLOCK_START:
+                has_block_start = true;
+                break;
+            case LexemeType::BLOCK_END:
+                has_block_end = true;
+                break;
+            case LexemeType::EQUALS:
+                has_equals = true;
+                break;
+            case LexemeType::STRING:
+                has_string = true;
+                break;
+            case LexemeType::NEWLINE:
+                has_newline = true;
+                break;
+            case LexemeType::END_OF_FILE:
+                has_eof = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    REQUIRE(has_qualifier);
+    REQUIRE(has_identifier);
+    REQUIRE(has_block_start);
+    REQUIRE(has_block_end);
+    REQUIRE(has_equals);
+    REQUIRE(has_string);
+    REQUIRE(has_newline);
+    REQUIRE(has_eof);
+}
+
+TEST_CASE("Lexer handles scope resolution operator", "[lexer][operators]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    bool has_scope_resolver = false;
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::SCOPE_RESOLVER && lex.value == "::") {
+            has_scope_resolver = true;
+            break;
+        }
+    }
+
+    REQUIRE(has_scope_resolver);
+}
+
+TEST_CASE("Lexer handles list delimiters", "[lexer][lists]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    bool has_list_start = false;
+    bool has_list_end = false;
+    bool has_delimiter = false;
+
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::LIST_START) has_list_start = true;
+        if (lex.type == LexemeType::LIST_END) has_list_end = true;
+        if (lex.type == LexemeType::DELIMETER) has_delimiter = true;
+    }
+
+    REQUIRE(has_list_start);
+    REQUIRE(has_list_end);
+    REQUIRE(has_delimiter);
+}
+
+// Lex location tests
+
+TEST_CASE("Lexer tracks line numbers correctly", "[lexer][location]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    // Find lexemes from different lines
+    size_t max_line = 0;
+    for (const auto& lex : lexemes) {
+        if (lex.loc.line_no > max_line) {
+            max_line = lex.loc.line_no;
+        }
+    }
+
+    // Should have lexemes from multiple lines
+    REQUIRE(max_line >= 2);
+}
+
+TEST_CASE("Lexer tracks column numbers correctly", "[lexer][location]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    // First lexeme on a line should have low column number
+    // Subsequent lexemes should have higher column numbers
+    bool found_different_columns = false;
+    size_t last_col = 0;
+
+    for (const auto& lex : lexemes) {
+        if (lex.loc.line_no == 1) {  // Just check first line
+            if (lex.loc.col_no > last_col) {
+                found_different_columns = true;
+            }
+            last_col = lex.loc.col_no;
+        }
+    }
+
+    REQUIRE(found_different_columns);
+}
+
+TEST_CASE("Lexer tracks file index correctly", "[lexer][location]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    // File index should increase monotonically
+    size_t last_idx = 0;
+    for (const auto& lex : lexemes) {
+        REQUIRE(lex.loc.file_idx >= last_idx);
+        last_idx = lex.loc.file_idx;
+    }
+}
+
+// Tests for string lexing
+
+TEST_CASE("Lexer preserves string content", "[lexer][strings]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    bool found_apple = false;
+    bool found_dog = false;
+    bool found_cat = false;
+
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::STRING) {
+            if (lex.value == "Apple") found_apple = true;
+            if (lex.value == "Dog") found_dog = true;
+            if (lex.value == "Cat") found_cat = true;
+        }
+    }
+
+    REQUIRE(found_apple);
+    REQUIRE(found_dog);
+    REQUIRE(found_cat);
+}
+
+// Tests for lexeme identifiers
+
+TEST_CASE("Lexer identifies identifiers correctly", "[lexer][identifiers]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    bool found_word = false;
+    bool found_array = false;
+    bool found_enum = false;
+    bool found_step = false;
+    bool found_link = false;
+
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::IDENTIFIER) {
+            if (lex.value == "word") found_word = true;
+            if (lex.value == "array") found_array = true;
+            if (lex.value == "enum") found_enum = true;
+            if (lex.value == "Step") found_step = true;
+            if (lex.value == "LINK") found_link = true;
+        }
+    }
+
+    REQUIRE(found_word);
+    REQUIRE(found_array);
+    REQUIRE(found_enum);
+    REQUIRE(found_step);
+    REQUIRE(found_link);
+}
+
+// Test for qualified lexemes
+
+TEST_CASE("Lexer identifies qualifiers correctly", "[lexer][qualifiers]") {
+    Lexer lexer(IO::get_test_file_path("SimpleDicts.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    std::vector<std::string> found_qualifiers;
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::DICT_QUALIFIER) {
+            found_qualifiers.push_back(lex.value);
+        }
+    }
+
+    // Should find at least one qualifier
+    REQUIRE(!found_qualifiers.empty());
+}
+
+// TEsts for lexeme sequences
+
+TEST_CASE("Assignment lexemes are in correct order", "[lexer][sequence]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    // Find an assignment sequence: IDENTIFIER EQUALS value
+    for (size_t i = 0; i + 2 < lexemes.size(); i++) {
+        if (lexemes[i].type == LexemeType::IDENTIFIER &&
+            lexemes[i + 1].type == LexemeType::EQUALS) {
+            // Next token should be a value (STRING, LIST_START, or IDENTIFIER for enum/varref)
+            LexemeType next_type = lexemes[i + 2].type;
+            bool is_value_start =
+                (next_type == LexemeType::STRING || next_type == LexemeType::LIST_START ||
+                 next_type == LexemeType::IDENTIFIER);
+            REQUIRE(is_value_start);
+            break;
+        }
+    }
+}
+
+TEST_CASE("Dictionary lexemes have matching braces", "[lexer][sequence]") {
+    Lexer lexer(IO::get_test_file_path("SimpleDicts.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    int brace_count = 0;
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::BLOCK_START) brace_count++;
+        if (lex.type == LexemeType::BLOCK_END) brace_count--;
+
+        // Should never go negative
+        REQUIRE(brace_count >= 0);
+    }
+
+    // Should be balanced
+    REQUIRE(brace_count == 0);
+}
+
+TEST_CASE("List lexemes have matching brackets", "[lexer][sequence]") {
+    Lexer lexer(IO::get_test_file_path("SimpleVariables.bf"));
+    std::vector<Lexeme> lexemes = lexer.lex();
+
+    int bracket_count = 0;
+    for (const auto& lex : lexemes) {
+        if (lex.type == LexemeType::LIST_START) bracket_count++;
+        if (lex.type == LexemeType::LIST_END) bracket_count--;
+
+        REQUIRE(bracket_count >= 0);
+    }
+
+    REQUIRE(bracket_count == 0);
 }

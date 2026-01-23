@@ -25,13 +25,14 @@ TEST_CASE("Single rule with compile a single, stale dependency", "[rule_runner]"
     RuleRunner rule_runner(graph, cfg, spawner, fs);
 
     REQUIRE(spawner->get_run_count() == 0);
-    REQUIRE(fs->get_write_count("prog") == 0);
-    REQUIRE(fs->get_write_count("a.c") == 0);
+    REQUIRE(fs->get_write_count("prog") == 1);
+    REQUIRE(fs->get_write_count("a.c") == 1);
 
     rule_runner.run_rule("prog");
 
     REQUIRE(spawner->get_run_count() == 1);
-    REQUIRE(fs->get_write_count("prog") == 1);
+    // Initial write + modification
+    REQUIRE(fs->get_write_count("prog") == 2);
 }
 
 TEST_CASE("Test multirule with a stale dependencies", "[rule_runner]") {
@@ -52,13 +53,14 @@ TEST_CASE("Test multirule with a stale dependencies", "[rule_runner]") {
     RuleRunner rule_runner(graph, cfg, spawner, fs);
 
     REQUIRE(spawner->get_run_count() == 0);
-    REQUIRE(fs->get_write_count("prog") == 0);
-    REQUIRE(fs->get_write_count("a.c") == 0);
+    REQUIRE(fs->get_write_count("prog") == 1);
+    REQUIRE(fs->get_write_count("a.c") == 1);
 
     rule_runner.run_rule("prog");
 
     REQUIRE(spawner->get_run_count() == 0);
-    REQUIRE(fs->get_write_count("prog") == 0);
+    // No change
+    REQUIRE(fs->get_write_count("prog") == 1);
 }
 
 TEST_CASE("Test multirule with a non-stale dependencies", "[rule_runner]") {
@@ -102,6 +104,8 @@ TEST_CASE("Single rule with compile a single, non-stale dependency", "[rule_runn
     fs->touch_at("a.c", Time::past());
     fs->touch_at("b.c", Time::past());
 
+    REQUIRE(fs->get_write_count("prog") == 1);
+
     auto spawner = std::make_shared<MockProcSpawner>(fs);
     RuleRunner rule_runner(graph, cfg, spawner, fs);
 
@@ -110,7 +114,8 @@ TEST_CASE("Single rule with compile a single, non-stale dependency", "[rule_runn
     rule_runner.run_rule("prog");
 
     REQUIRE(spawner->get_run_count() == 0);
-    REQUIRE(fs->get_write_count("prog") == 0);
+    // No changes
+    REQUIRE(fs->get_write_count("prog") == 1);
 }
 
 TEST_CASE("Test clean rule", "[rule_runner]") {
@@ -189,6 +194,9 @@ TEST_CASE("Single rule chained command construction. No recompile needed", "[rul
     fs->touch_at("main.o", Time::future());
     fs->touch_at("prog", Time::future());
 
+    REQUIRE(fs->get_write_count("main.o") == 1);
+    REQUIRE(fs->get_write_count("prog") == 1);
+
     auto spawner = std::make_shared<MockProcSpawner>(fs);
     RuleRunner rule_runner(graph, cfg, spawner, fs);
 
@@ -196,7 +204,8 @@ TEST_CASE("Single rule chained command construction. No recompile needed", "[rul
 
     rule_runner.run_rule("prog");
 
+    // Should not change
     REQUIRE(spawner->get_run_count() == 0);
-    REQUIRE(fs->get_write_count("main.o") == 0);
-    REQUIRE(fs->get_write_count("prog") == 0);
+    REQUIRE(fs->get_write_count("main.o") == 1);
+    REQUIRE(fs->get_write_count("prog") == 1);
 }
