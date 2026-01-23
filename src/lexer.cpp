@@ -136,6 +136,7 @@ void Lexer::lex_rule_qualifier(std::vector<Lexeme>& lexemes) try {
         throw SyntaxError("Unclosed rule identifier found", opener_loc);
     }
     consume(SINGLE_RULE_NAME_END);
+
     lexemes.push_back({LexemeType::DICT_QUALIFIER, id, opener_loc});
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Lexing rule qualifier ", loc);

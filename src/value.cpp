@@ -90,7 +90,7 @@ Value& Value::operator+=(const Value& other) {
             break;
         }
         case ValueType::LIST: {
-            std::get<ValueList>(raw_val) += std::get<ValueList>(raw_val);
+            std::get<ValueList>(raw_val) += std::get<ValueList>(other.raw_val);
             break;
         }
         default: {

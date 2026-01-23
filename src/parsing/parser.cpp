@@ -145,6 +145,10 @@ std::unique_ptr<Expr> Parser::parse_term() try {
         }
         case LexemeType::IDENTIFIER: {
             std::string identifier = consume(LexemeType::IDENTIFIER).value;
+            if (at_end()) {
+                return std::make_unique<VarRefExpr>(identifier);
+            }
+
             switch (peek().type) {
                 case LexemeType::FN_START: {
                     return parse_fn(std::move(identifier));

@@ -20,20 +20,22 @@ std::unique_ptr<Rule> RuleFactory::make_rule(std::string name, Value obj, Locati
         }
     }
 } catch (std::exception& excep) {
-    Error::update_and_throw(excep, "Rule factory method for " + name + "'", loc);
+    Error::update_and_throw(excep, "Rule factory method for '" + name + "'", loc);
 }
 
 std::unique_ptr<CleanRule> RuleFactory::make_clean_rule(std::string name, Value obj,
-                                                        Location loc) const {
+                                                        Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
     auto deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::TARGETS).get<ValueList>());
     return std::make_unique<CleanRule>(name, deps, loc);
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "CleanRule factory method for '<CleanRule> " + name + "'", loc);
 }
 
 std::unique_ptr<MultiRule> RuleFactory::make_multi_rule(std::string name, Value obj,
-                                                        Location loc) const {
+                                                        Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::DEPS, ValueType::LIST},
@@ -52,10 +54,12 @@ std::unique_ptr<MultiRule> RuleFactory::make_multi_rule(std::string name, Value 
     auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 
     return std::make_unique<MultiRule>(name, deps, out, step, loc);
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "MultiRule factory method for '<MultiRule> " + name + "'", loc);
 }
 
 std::unique_ptr<SingleRule> RuleFactory::make_single_rule(std::string name, Value obj,
-                                                          Location loc) const {
+                                                          Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
     Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains(
@@ -65,4 +69,6 @@ std::unique_ptr<SingleRule> RuleFactory::make_single_rule(std::string name, Valu
     auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 
     return std::make_unique<SingleRule>(std::move(name), std::move(deps), step, loc);
+} catch (std::exception& excep) {
+    Error::update_and_throw(excep, "SingleRule factory method for '<Rule> " + name + "'", loc);
 }

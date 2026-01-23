@@ -27,6 +27,7 @@ Value BinaryOpExpr::evaluate(VarMap& var_map, FuncRegistry& fn_reg) const try {
             val += right->evaluate(var_map, fn_reg);
         }
     }
+
     return val;
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Evaluating binary operation expression");
