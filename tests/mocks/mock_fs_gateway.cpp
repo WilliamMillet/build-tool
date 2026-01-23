@@ -22,7 +22,7 @@ void MockFsGateway::touch(std::string filename) {
 void MockFsGateway::touch_at(std::string filename, std::filesystem::file_time_type time) {
     auto entry = name_to_file.find(filename);
     if (entry == name_to_file.end()) {
-        name_to_file[filename] = MockFileEntry{filename, time, 0};
+        name_to_file[filename] = MockFileEntry{filename, time, 1};
     } else {
         name_to_file[filename].last_write_time = std::chrono::file_clock::now();
         name_to_file[filename].write_count++;

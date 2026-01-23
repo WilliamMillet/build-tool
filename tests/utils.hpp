@@ -4,9 +4,8 @@
 #include "src/parsing/expr.hpp"
 #include "src/rule_graph.hpp"
 
-using Flags = std::vector<std::string>;
-
 namespace Factories {
+using Flags = std::vector<std::string>;
 
 /**
  * Builds the following config expression:
@@ -44,3 +43,10 @@ namespace Time {
 std::filesystem::file_time_type past();
 std::filesystem::file_time_type future();
 }  // namespace Time
+
+namespace IO {
+inline const std::string TEST_DATA_DIR = "../tests/data/files";
+
+/** Get the path of a file in the file directory of test data */
+std::filesystem::path get_test_file_path(std::string file);
+}  // namespace IO

@@ -10,6 +10,7 @@
 #include "mock_fs_gateway.hpp"
 #include "src/io/proc_spawner.hpp"
 
+/** @note Only supports compilation as of now */
 class MockProcSpawner : public ProcessSpawner {
    public:
     MockProcSpawner(std::shared_ptr<MockFsGateway> mock_fs);

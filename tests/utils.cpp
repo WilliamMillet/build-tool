@@ -48,3 +48,7 @@ std::filesystem::file_time_type Time::past() {
 std::filesystem::file_time_type Time::future() {
     return std::filesystem::file_time_type::clock::now() + 10s;
 };
+
+std::filesystem::path IO::get_test_file_path(std::string file) {
+    return std::filesystem::path(TEST_DATA_DIR + "/" + file);
+}
