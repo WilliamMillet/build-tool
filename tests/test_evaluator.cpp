@@ -123,9 +123,9 @@ TEST_CASE("Rule parses correctly", "[variable_evaluator]") {
     for (const std::string& d : dep_strings) {
         deps.push_back(std::make_unique<StringExpr>(d));
     }
-    rule->fields_map[RuleFields::DEPS] = std::make_unique<ListExpr>(std::move(deps));
+    rule->insert_entry(RuleFields::DEPS, std::make_unique<ListExpr>(std::move(deps)));
 
-    rule->fields_map[RuleFields::STEP] = std::make_unique<EnumExpr>("Step", "COMPILE");
+    rule->insert_entry(RuleFields::STEP, std::make_unique<EnumExpr>("Step", "COMPILE"));
 
     vars.push_back({"app", std::move(rule), VarCategory::SINGLE_RULE, {0, 0, 0}});
 
@@ -149,16 +149,16 @@ TEST_CASE("MultiRule parses correctly", "[variable_evaluator]") {
     for (const std::string& d : dep_strings) {
         deps.push_back(std::make_unique<StringExpr>(d));
     }
-    rule->fields_map[RuleFields::DEPS] = std::make_unique<ListExpr>(std::move(deps));
+    rule->insert_entry(RuleFields::DEPS, std::make_unique<ListExpr>(std::move(deps)));
 
     std::vector<std::string> output_strings = {"file1.o", "file2.o", "file3.o"};
     std::vector<std::unique_ptr<Expr>> outputs;
     for (const std::string& o : output_strings) {
         outputs.push_back(std::make_unique<StringExpr>(o));
     }
-    rule->fields_map[RuleFields::OUTPUT] = std::make_unique<ListExpr>(std::move(outputs));
+    rule->insert_entry(RuleFields::OUTPUT, std::make_unique<ListExpr>(std::move(outputs)));
 
-    rule->fields_map[RuleFields::STEP] = std::make_unique<EnumExpr>("Step", "COMPILE");
+    rule->insert_entry(RuleFields::STEP, std::make_unique<EnumExpr>("Step", "COMPILE"));
 
     vars.push_back({"compilation", std::move(rule), VarCategory::MULTI_RULE, {0, 0, 0}});
 
@@ -182,7 +182,7 @@ TEST_CASE("Clean rule parses correctly", "[variable_evaluator]") {
     for (const std::string& t : target_strings) {
         targets.push_back(std::make_unique<StringExpr>(t));
     }
-    rule->fields_map[RuleFields::TARGETS] = std::make_unique<ListExpr>(std::move(targets));
+    rule->insert_entry(RuleFields::TARGETS, std::make_unique<ListExpr>(std::move(targets)));
 
     vars.push_back({"clean", std::move(rule), VarCategory::CLEAN, {0, 0, 0}});
 

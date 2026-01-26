@@ -55,7 +55,7 @@ std::vector<std::string> VariableEvaluator::aggregate_deps(const ParsedVariable&
 
         VarRefExpr* v_var = dynamic_cast<VarRefExpr*>(v);
         if (v_var != nullptr) {
-            deps.push_back(v_var->identifier);
+            deps.push_back(v_var->get_id());
         }
 
         for (Expr* child : v->get_children()) {

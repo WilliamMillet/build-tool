@@ -35,8 +35,8 @@ TEST_CASE("Test parser with simple variables", "[parser]") {
     EnumExpr* enum_expr = dynamic_cast<EnumExpr*>(enum_var.expr.get());
     REQUIRE(enum_expr != nullptr);
     REQUIRE(enum_expr->get_children().size() == 0);
-    REQUIRE(enum_expr->scope == "Step");
-    REQUIRE(enum_expr->name == "LINK");
+    REQUIRE(enum_expr->get_scope() == "Step");
+    REQUIRE(enum_expr->get_name() == "LINK");
     REQUIRE(enum_var.loc == Location{0, 4, 0});
 
     ParsedVariable& list_var = parsed.at(2);
@@ -69,15 +69,17 @@ TEST_CASE("Test parser with regular dictionary", "[parser]") {
     DictionaryExpr* dict_expr = dynamic_cast<DictionaryExpr*>(dict_var.expr.get());
     REQUIRE(dict_expr != nullptr);
 
-    REQUIRE(dict_expr->fields_map.size() == 2);
-    REQUIRE(dict_expr->fields_map.count("name") == 1);
-    REQUIRE(dict_expr->fields_map.count("count") == 1);
+    REQUIRE(dict_expr->get_fields_map().size() == 2);
+    REQUIRE(dict_expr->get_fields_map().count("name") == 1);
+    REQUIRE(dict_expr->get_fields_map().count("count") == 1);
 
-    StringExpr* name_expr = dynamic_cast<StringExpr*>(dict_expr->fields_map.at("name").get());
+    const auto& fields_map = dict_expr->get_fields_map();
+
+    StringExpr* name_expr = dynamic_cast<StringExpr*>(fields_map.at("name").get());
     REQUIRE(name_expr != nullptr);
     REQUIRE(name_expr->val == "value");
 
-    StringExpr* count_expr = dynamic_cast<StringExpr*>(dict_expr->fields_map.at("count").get());
+    StringExpr* count_expr = dynamic_cast<StringExpr*>(fields_map.at("count").get());
     REQUIRE(count_expr != nullptr);
     REQUIRE(count_expr->val == "5");
 
@@ -96,36 +98,35 @@ TEST_CASE("Test parser with Config dictionary", "[parser]") {
     DictionaryExpr* cfg_expr = dynamic_cast<DictionaryExpr*>(cfg_var.expr.get());
     REQUIRE(cfg_expr != nullptr);
 
-    REQUIRE(cfg_expr->fields_map.size() == 4);
-    REQUIRE(cfg_expr->fields_map.count("compiler") == 1);
-    REQUIRE(cfg_expr->fields_map.count("compilation_flags") == 1);
-    REQUIRE(cfg_expr->fields_map.count("link_flags") == 1);
-    REQUIRE(cfg_expr->fields_map.count("default") == 1);
+    REQUIRE(cfg_expr->get_fields_map().size() == 4);
+    REQUIRE(cfg_expr->get_fields_map().count("compiler") == 1);
+    REQUIRE(cfg_expr->get_fields_map().count("compilation_flags") == 1);
+    REQUIRE(cfg_expr->get_fields_map().count("link_flags") == 1);
+    REQUIRE(cfg_expr->get_fields_map().count("default") == 1);
 
-    StringExpr* compiler_expr =
-        dynamic_cast<StringExpr*>(cfg_expr->fields_map.at("compiler").get());
+    const auto& fields_map = cfg_expr->get_fields_map();
+
+    StringExpr* compiler_expr = dynamic_cast<StringExpr*>(fields_map.at("compiler").get());
     REQUIRE(compiler_expr != nullptr);
     REQUIRE(compiler_expr->val == "clang++");
 
-    ListExpr* comp_flags_expr =
-        dynamic_cast<ListExpr*>(cfg_expr->fields_map.at("compilation_flags").get());
+    ListExpr* comp_flags_expr = dynamic_cast<ListExpr*>(fields_map.at("compilation_flags").get());
     REQUIRE(comp_flags_expr != nullptr);
-    REQUIRE(comp_flags_expr->elements.size() == 2);
+    REQUIRE(comp_flags_expr->get_elements().size() == 2);
 
-    StringExpr* flag1 = dynamic_cast<StringExpr*>(comp_flags_expr->elements.at(0).get());
+    StringExpr* flag1 = dynamic_cast<StringExpr*>(comp_flags_expr->get_elements().at(0).get());
     REQUIRE(flag1 != nullptr);
     REQUIRE(flag1->val == "-g");
 
-    StringExpr* flag2 = dynamic_cast<StringExpr*>(comp_flags_expr->elements.at(1).get());
+    StringExpr* flag2 = dynamic_cast<StringExpr*>(comp_flags_expr->get_elements().at(1).get());
     REQUIRE(flag2 != nullptr);
     REQUIRE(flag2->val == "-Wall");
 
-    ListExpr* link_flags_expr =
-        dynamic_cast<ListExpr*>(cfg_expr->fields_map.at("link_flags").get());
+    ListExpr* link_flags_expr = dynamic_cast<ListExpr*>(fields_map.at("link_flags").get());
     REQUIRE(link_flags_expr != nullptr);
-    REQUIRE(link_flags_expr->elements.size() == 0);
+    REQUIRE(link_flags_expr->get_elements().size() == 0);
 
-    StringExpr* default_expr = dynamic_cast<StringExpr*>(cfg_expr->fields_map.at("default").get());
+    StringExpr* default_expr = dynamic_cast<StringExpr*>(fields_map.at("default").get());
     REQUIRE(default_expr != nullptr);
     REQUIRE(default_expr->val == "app");
 
@@ -144,31 +145,33 @@ TEST_CASE("Test parser with Rule dictionary", "[parser]") {
     DictionaryExpr* rule_expr = dynamic_cast<DictionaryExpr*>(rule_var.expr.get());
     REQUIRE(rule_expr != nullptr);
 
-    REQUIRE(rule_expr->fields_map.size() == 3);
-    REQUIRE(rule_expr->fields_map.count("deps") == 1);
-    REQUIRE(rule_expr->fields_map.count("output") == 1);
-    REQUIRE(rule_expr->fields_map.count("step") == 1);
+    REQUIRE(rule_expr->get_fields_map().size() == 3);
+    REQUIRE(rule_expr->get_fields_map().count("deps") == 1);
+    REQUIRE(rule_expr->get_fields_map().count("output") == 1);
+    REQUIRE(rule_expr->get_fields_map().count("step") == 1);
 
-    ListExpr* deps_expr = dynamic_cast<ListExpr*>(rule_expr->fields_map.at("deps").get());
+    const auto& fields_map = rule_expr->get_fields_map();
+
+    ListExpr* deps_expr = dynamic_cast<ListExpr*>(fields_map.at("deps").get());
     REQUIRE(deps_expr != nullptr);
-    REQUIRE(deps_expr->elements.size() == 2);
+    REQUIRE(deps_expr->get_elements().size() == 2);
 
-    StringExpr* dep1 = dynamic_cast<StringExpr*>(deps_expr->elements.at(0).get());
+    StringExpr* dep1 = dynamic_cast<StringExpr*>(deps_expr->get_elements().at(0).get());
     REQUIRE(dep1 != nullptr);
     REQUIRE(dep1->val == "main.o");
 
-    StringExpr* dep2 = dynamic_cast<StringExpr*>(deps_expr->elements.at(1).get());
+    StringExpr* dep2 = dynamic_cast<StringExpr*>(deps_expr->get_elements().at(1).get());
     REQUIRE(dep2 != nullptr);
     REQUIRE(dep2->val == "utils.o");
 
-    StringExpr* output_expr = dynamic_cast<StringExpr*>(rule_expr->fields_map.at("output").get());
+    StringExpr* output_expr = dynamic_cast<StringExpr*>(fields_map.at("output").get());
     REQUIRE(output_expr != nullptr);
     REQUIRE(output_expr->val == "app");
 
-    EnumExpr* step_expr = dynamic_cast<EnumExpr*>(rule_expr->fields_map.at("step").get());
+    EnumExpr* step_expr = dynamic_cast<EnumExpr*>(fields_map.at("step").get());
     REQUIRE(step_expr != nullptr);
-    REQUIRE(step_expr->scope == "Step");
-    REQUIRE(step_expr->name == "LINK");
+    REQUIRE(step_expr->get_scope() == "Step");
+    REQUIRE(step_expr->get_name() == "LINK");
 
     REQUIRE(rule_var.loc == Location{0, 1, 0});
 }
@@ -185,23 +188,25 @@ TEST_CASE("Test parser with MultiRule dictionary", "[parser]") {
     DictionaryExpr* rule_expr = dynamic_cast<DictionaryExpr*>(rule_var.expr.get());
     REQUIRE(rule_expr != nullptr);
 
-    REQUIRE(rule_expr->fields_map.size() == 3);
-    REQUIRE(rule_expr->fields_map.count("deps") == 1);
-    REQUIRE(rule_expr->fields_map.count("output") == 1);
-    REQUIRE(rule_expr->fields_map.count("step") == 1);
+    REQUIRE(rule_expr->get_fields_map().size() == 3);
+    REQUIRE(rule_expr->get_fields_map().count("deps") == 1);
+    REQUIRE(rule_expr->get_fields_map().count("output") == 1);
+    REQUIRE(rule_expr->get_fields_map().count("step") == 1);
 
-    VarRefExpr* deps_expr = dynamic_cast<VarRefExpr*>(rule_expr->fields_map.at("deps").get());
+    const auto& fields_map = rule_expr->get_fields_map();
+
+    VarRefExpr* deps_expr = dynamic_cast<VarRefExpr*>(fields_map.at("deps").get());
     REQUIRE(deps_expr != nullptr);
-    REQUIRE(deps_expr->identifier == "cpp_files");
+    REQUIRE(deps_expr->get_id() == "cpp_files");
 
-    VarRefExpr* output_expr = dynamic_cast<VarRefExpr*>(rule_expr->fields_map.at("output").get());
+    VarRefExpr* output_expr = dynamic_cast<VarRefExpr*>(fields_map.at("output").get());
     REQUIRE(output_expr != nullptr);
-    REQUIRE(output_expr->identifier == "cpp_names");
+    REQUIRE(output_expr->get_id() == "cpp_names");
 
-    EnumExpr* step_expr = dynamic_cast<EnumExpr*>(rule_expr->fields_map.at("step").get());
+    EnumExpr* step_expr = dynamic_cast<EnumExpr*>(fields_map.at("step").get());
     REQUIRE(step_expr != nullptr);
-    REQUIRE(step_expr->scope == "Step");
-    REQUIRE(step_expr->name == "COMPILE");
+    REQUIRE(step_expr->get_scope() == "Step");
+    REQUIRE(step_expr->get_name() == "COMPILE");
 
     REQUIRE(rule_var.loc == Location{0, 1, 0});
 }
@@ -218,18 +223,20 @@ TEST_CASE("Test parser with Clean dictionary", "[parser]") {
     DictionaryExpr* clean_expr = dynamic_cast<DictionaryExpr*>(clean_var.expr.get());
     REQUIRE(clean_expr != nullptr);
 
-    REQUIRE(clean_expr->fields_map.size() == 1);
-    REQUIRE(clean_expr->fields_map.count("targets") == 1);
+    REQUIRE(clean_expr->get_fields_map().size() == 1);
+    REQUIRE(clean_expr->get_fields_map().count("targets") == 1);
 
-    ListExpr* targets_expr = dynamic_cast<ListExpr*>(clean_expr->fields_map.at("targets").get());
+    const auto& fields_map = clean_expr->get_fields_map();
+
+    ListExpr* targets_expr = dynamic_cast<ListExpr*>(fields_map.at("targets").get());
     REQUIRE(targets_expr != nullptr);
-    REQUIRE(targets_expr->elements.size() == 2);
+    REQUIRE(targets_expr->get_elements().size() == 2);
 
-    StringExpr* target1 = dynamic_cast<StringExpr*>(targets_expr->elements.at(0).get());
+    StringExpr* target1 = dynamic_cast<StringExpr*>(targets_expr->get_elements().at(0).get());
     REQUIRE(target1 != nullptr);
     REQUIRE(target1->val == "build/");
 
-    StringExpr* target2 = dynamic_cast<StringExpr*>(targets_expr->elements.at(1).get());
+    StringExpr* target2 = dynamic_cast<StringExpr*>(targets_expr->get_elements().at(1).get());
     REQUIRE(target2 != nullptr);
     REQUIRE(target2->val == "*.o");
 

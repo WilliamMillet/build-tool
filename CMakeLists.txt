@@ -16,9 +16,7 @@ add_compile_options(
 
 add_link_options(-fsanitize=address,undefined)
 
-# ======================
 # Application
-# ======================
 
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 
@@ -26,9 +24,8 @@ add_executable(my_make ${APP_SOURCES})
 
 target_include_directories(my_make PRIVATE include)
 
-# ======================
+
 # Tests
-# ======================
 
 file(GLOB_RECURSE  TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
 

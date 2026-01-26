@@ -9,13 +9,6 @@
 #include "../io/fs_gateway.hpp"
 #include "config.hpp"
 
-// TODO: This and the associated .cpp file could use significant refactors.
-//  - Once I have better error handling which shows the snippet, I won't need the string constructor
-// his would clean my code up
-//  - Once I improve the Value interface I can simplify the constructors for this significantly
-//  - Revaluate which getters need to be exposed her
-//
-
 using Command = std::vector<std::string>;
 
 enum class RuleType { SINGLE, MULTI, CLEAN };

@@ -155,7 +155,6 @@ UnknownError::UnknownError(const std::exception& excep, std::string ctx) : Error
     add_ctx(ctx);
 };
 
-// TODO - Consider deleting this IOError im not using it anywhere. Either that or user it
 IOError::IOError(std::string _msg, Location _loc) : Error(_msg, _loc) {}
 IOError::IOError(std::string _msg) : Error(_msg) {}
 std::string IOError::err_name() const { return "IOError"; }

@@ -176,7 +176,7 @@ std::unique_ptr<FnExpr> Parser::parse_fn(std::string fn_name) try {
     const Lexeme opening_paren = consume(LexemeType::FN_START);
 
     while (!at_end() && !match_type({LexemeType::FN_END})) {
-        fn_expr->args.push_back(parse_expr());
+        fn_expr->add_arg(parse_expr());
         consume(LexemeType::DELIMETER);
     }
 
@@ -196,7 +196,7 @@ std::unique_ptr<ListExpr> Parser::parse_list() try {
     const Lexeme opening_paren = consume(LexemeType::LIST_START);
 
     while (!at_end() && !match_type({LexemeType::LIST_END})) {
-        list->elements.push_back(parse_expr());
+        list->append(parse_expr());
         if (match_type({LexemeType::DELIMETER})) {
             consume(LexemeType::DELIMETER);
         }
@@ -220,7 +220,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
     while (!at_end() && !match_type({LexemeType::BLOCK_END})) {
         std::string id = consume(LexemeType::IDENTIFIER).value;
         consume(LexemeType::EQUALS);
-        dict_expr->fields_map[id] = parse_expr();
+        dict_expr->insert_entry(id, parse_expr());
         consume(LexemeType::NEWLINE);
     }
     if (at_end()) {
