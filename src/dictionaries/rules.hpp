@@ -79,6 +79,9 @@ class MultiRule : public Rule {
 
     bool should_run(FSGateway& fs) const override;
 
+    /** Get a SingleRule for each rule in the MultiRule */
+    std::vector<SingleRule> partition() const;
+
    protected:
     // The output files. For all i, output[i] will be the output file for deps[i]
     std::vector<std::string> output;

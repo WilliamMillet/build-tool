@@ -22,7 +22,7 @@ TEST_CASE("MultiRule file compiles multiple sources correctly", "[integration][m
     orchestrator.run_rule("app");
 
     // Only runs the app link command, not the compilation multirule
-    REQUIRE(proc->get_run_count() == 1);
+    REQUIRE(proc->get_run_count() == 4);
 }
 
 TEST_CASE("MultiRule only recompiles changed files", "[integration][multirule]") {

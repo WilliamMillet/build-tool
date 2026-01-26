@@ -125,6 +125,7 @@ MultiRule Fields:
 | **output** | List[String] | No | A list of output values where `output[i]` is the result of the build command for `deps[i]`. |
 | **deps** | List[String] | No | A list of dependencies where `deps[i]` is the input for the build command producing `output[i]`. |
 | **step** | Step (Enum) | No | The build step this represents. |
+> During the build process, multi rules will be converted to singular rules. For each value `0 < i <= MultiRule Size`, there will be a new rule with a single dependency `deps[i]` and identifier `output[i]`. This is important to note for debugging scenarios
 ### `<Clean>`
 A special type of rule that allows for the removal of files.
 ```ru
@@ -267,7 +268,7 @@ Expr itself is implemented as a virtual class, with derived classes such as `Bin
 ### Variable evaluation
 The variable evaluation step, performed by the `VariableEvaluator` class is responsible for taking a collection of parsed variables and evaluating them. Since variables can be defined in any order, the first step of this is to determine the order to perform the evaluation. It is necessary that for any variable V, the dependencies of V are evaluated before it. The dependencies of each expression can be aggregated by performing breadth-first search on the expression, accessing the sub-expressions of a node via the `get_children` virtual method which accepts as a common interface. Once variables are aggregated, an adjacency list can be formed where `adj[v] = dep[v]`. Kahn's algorithm for topological sort allows for us to find the order we desire.
 
-Once sorted, we can evaluate each `Expr` using the polymorphic `evaluate` method which recursively evaluates each element of the tree. From this we can form a dictionary of identifier variable mappings. It is important to note that only qualified dictionaries are relevant to the final build process, non-qualified dictionary variables only exist to be evaluated in qualified dictionaries. Therefore, we will only return the evaluated qualified dictionaries:
+Once sorted, we can evaluate each `Expr` using the polymorphic `evaluate` method which recursively evaluates each element of the tree. From this we can form a dictionary of identifier variable mappings. At this point, all `MultiRule` instances are partitioned into single rules. It is important to note that only qualified dictionaries are relevant to the final build process, non-qualified dictionary variables only exist to be evaluated in qualified dictionaries. Therefore, we will only return the evaluated qualified dictionaries:
 ```cpp
 struct QualifiedDicts {
     std::vector<std::unique_ptr<Rule>> rules;

@@ -165,10 +165,11 @@ TEST_CASE("MultiRule parses correctly", "[variable_evaluator]") {
     VariableEvaluator evaluator(std::move(vars), FuncRegistry());
     QualifiedDicts dicts = evaluator.evaluate();
 
-    REQUIRE(dicts.rules.size() == 1);
+    REQUIRE(dicts.rules.size() == 3);
     std::unique_ptr<Rule>& evaluated = dicts.rules.at(0);
-    REQUIRE(evaluated->get_name() == "compilation");
-    REQUIRE(evaluated->get_deps() == dep_strings);
+    REQUIRE(evaluated->get_name() == "file1.o");
+    std::vector<std::string> exp_deps = {"file1.cpp"};
+    REQUIRE(evaluated->get_deps() == exp_deps);
 }
 
 TEST_CASE("Clean rule parses correctly", "[variable_evaluator]") {

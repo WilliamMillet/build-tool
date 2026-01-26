@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <ranges>
 #include <string>
 
 #include "../errors/error.hpp"
@@ -83,6 +84,14 @@ std::vector<Command> MultiRule::get_commands(const Config& cfg) const try {
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "Building command for '<MultiRule> " + name + "'", loc);
 }
+
+std::vector<SingleRule> MultiRule::partition() const {
+    std::vector<SingleRule> parts;
+    for (const auto& [dep, out] : std::ranges::views::zip(deps, output)) {
+        parts.push_back(SingleRule(out, {dep}, step, loc));
+    }
+    return parts;
+};
 
 CleanRule::CleanRule(std::string name, std::vector<std::string> targets, Location _loc) try
     : Rule("Clean", std::move(name), std::move(targets), _loc) {

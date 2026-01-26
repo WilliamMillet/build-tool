@@ -132,6 +132,15 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
         cfg = std::make_unique<Config>(fac.make_config(var.identifier, val));
     } else if (var.category != VarCategory::REGULAR) {
         RuleFactory fac;
-        rules.push_back(fac.make_rule(var.identifier, val, var.loc, var.category));
+        std::unique_ptr<Rule> rule = fac.make_rule(var.identifier, val, var.loc, var.category);
+        MultiRule* multi_rule = dynamic_cast<MultiRule*>(rule.get());
+        if (multi_rule != nullptr) {
+            std::vector<SingleRule> single_rules = multi_rule->partition();
+            for (SingleRule& rule : single_rules) {
+                rules.push_back(std::make_unique<SingleRule>(rule));
+            }
+        } else {
+            rules.push_back(std::move(rule));
+        }
     }
 }

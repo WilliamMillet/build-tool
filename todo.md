@@ -8,12 +8,9 @@ HIGH PRIORITY
 - Gotta read slightly more in depth into the whole parser thing. My current structure is shit
 - This could be good? https://pgrandinetti.github.io/compilers/page/how-to-design-a-parser/
 - Maybe implement a toString method for Value to simplify debugging
-- Consider adding more templates to the Value file. E.g. something that allows you to get a type (like std::string) from an enum (like ValueType::STRING), vice versa or both.
 - Implement an equivalent of make -j. Apparently topological sort is useful for this
 - Right now, MultiRule compiles everything, even if only one command needs running. Maybe fix this
-- May be some const correctness issues throughout the code. Search and address any I find
 - Make errors colourful. Maybe use a library for this. Could be a good opportunity for this
-- Ctrl f to find all todos across codebase
 
 # REALLY GOOD IDEAS
 - Have a cache of the file data. If the build file didnt change between runs, I can just used the cache stuff

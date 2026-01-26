@@ -10,7 +10,7 @@ class RuleFactory {
    public:
     /**
      * Create a rule object based upon a dictionary value containing a SingleRule, MultiRule rule or
-     * clean rule
+     * clean rule.
      */
     std::unique_ptr<Rule> make_rule(std::string name, Value obj, Location loc,
                                     VarCategory cat) const;
