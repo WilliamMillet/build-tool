@@ -232,15 +232,31 @@ TEST_CASE("FuncRegistry throws on unknown function", "[builtins][registry]") {
 
 // 'files' function tests
 
-TEST_CASE("Files function works for flat directories", "[builtins][files]") {
+/**
+ * Call the 'files' function with a file from data/files/code/[dirname] with a list of permitted
+ * extensions
+ */
+Value call_files_func(std::string dirname, std::vector<std::string> extensions) {
     FuncRegistry registry;
 
     std::filesystem::path path_end = "code";
-    path_end /= "flat";
+    path_end /= dirname;
     const std::filesystem::path path = IO::get_test_file_path(path_end);
 
-    const std::vector<Value> args = {Value(path)};
-    const Value result = registry.call("files", args);
+    std::vector<Value> args;
+    args.push_back(Value(path));
+    std::vector<std::unique_ptr<Value>> file_vlist_elements;
+    for (const std::string& ext : extensions) {
+        file_vlist_elements.push_back(std::make_unique<Value>(ext));
+    }
+
+    ValueList vl(std::move(file_vlist_elements));
+    args.push_back(Value(vl));
+    return registry.call("files", args);
+}
+
+TEST_CASE("Files function works for flat directories", "[builtins][files]") {
+    const Value result = call_files_func("flat", {".cpp"});
 
     REQUIRE(result.get_type() == ValueType::LIST);
     const ValueList& vlist = result.get<ValueList>();
@@ -258,14 +274,7 @@ TEST_CASE("Files function works for flat directories", "[builtins][files]") {
 }
 
 TEST_CASE("Files function ignores not .cpp files", "[builtins][files]") {
-    FuncRegistry registry;
-
-    std::filesystem::path path_end = "code";
-    path_end /= "headers";
-    const std::filesystem::path path = IO::get_test_file_path(path_end);
-
-    const std::vector<Value> args = {Value(path)};
-    const Value result = registry.call("files", args);
+    const Value result = call_files_func("headers", {".cpp"});
 
     REQUIRE(result.get_type() == ValueType::LIST);
     const ValueList& vlist = result.get<ValueList>();
@@ -276,14 +285,7 @@ TEST_CASE("Files function ignores not .cpp files", "[builtins][files]") {
 }
 
 TEST_CASE("Files function works recursively", "[builtins][files]") {
-    FuncRegistry registry;
-
-    std::filesystem::path path_end = "code";
-    path_end /= "nested";
-    const std::filesystem::path path = IO::get_test_file_path(path_end);
-
-    const std::vector<Value> args = {Value(path)};
-    const Value result = registry.call("files", args);
+    const Value result = call_files_func("nested", {".cpp"});
 
     REQUIRE(result.get_type() == ValueType::LIST);
     const ValueList& vlist = result.get<ValueList>();
