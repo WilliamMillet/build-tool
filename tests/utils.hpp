@@ -48,5 +48,5 @@ namespace IO {
 inline const std::string TEST_DATA_DIR = "../tests/data/files";
 
 /** Get the path of a file in the file directory of test data */
-std::filesystem::path get_test_file_path(std::string file);
+std::filesystem::path get_test_file_path(std::filesystem::path file);
 }  // namespace IO

@@ -1,11 +1,14 @@
 /** Tests for the Value class and built-in functions */
+#include <filesystem>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include "../catch.hpp"
 #include "src/built_in/func_registry.hpp"
 #include "src/built_in/funcs.hpp"
 #include "src/value.hpp"
+#include "utils.hpp"
 
 // Tests for value type
 
@@ -225,4 +228,76 @@ TEST_CASE("FuncRegistry throws on unknown function", "[builtins][registry]") {
     std::vector<Value> args;
 
     REQUIRE_THROWS(registry.call("unknown_func", args));
+}
+
+// 'files' function tests
+
+TEST_CASE("Files function works for flat directories", "[builtins][files]") {
+    FuncRegistry registry;
+
+    std::filesystem::path path_end = "code";
+    path_end /= "flat";
+    const std::filesystem::path path = IO::get_test_file_path(path_end);
+
+    const std::vector<Value> args = {Value(path)};
+    const Value result = registry.call("files", args);
+
+    REQUIRE(result.get_type() == ValueType::LIST);
+    const ValueList& vlist = result.get<ValueList>();
+
+    std::unordered_set<std::string> files_found;
+
+    for (const Value& v : vlist) {
+        REQUIRE(v.get_type() == ValueType::STRING);
+        files_found.insert(v.get<std::string>());
+    }
+
+    REQUIRE(files_found.size() == 2);
+    REQUIRE(files_found.contains("a.cpp"));
+    REQUIRE(files_found.contains("b.cpp"));
+}
+
+TEST_CASE("Files function ignores not .cpp files", "[builtins][files]") {
+    FuncRegistry registry;
+
+    std::filesystem::path path_end = "code";
+    path_end /= "headers";
+    const std::filesystem::path path = IO::get_test_file_path(path_end);
+
+    const std::vector<Value> args = {Value(path)};
+    const Value result = registry.call("files", args);
+
+    REQUIRE(result.get_type() == ValueType::LIST);
+    const ValueList& vlist = result.get<ValueList>();
+
+    std::unordered_set<std::string> files_found;
+
+    REQUIRE(vlist.size() == 0);
+}
+
+TEST_CASE("Files function works recursively", "[builtins][files]") {
+    FuncRegistry registry;
+
+    std::filesystem::path path_end = "code";
+    path_end /= "nested";
+    const std::filesystem::path path = IO::get_test_file_path(path_end);
+
+    const std::vector<Value> args = {Value(path)};
+    const Value result = registry.call("files", args);
+
+    REQUIRE(result.get_type() == ValueType::LIST);
+    const ValueList& vlist = result.get<ValueList>();
+
+    std::unordered_set<std::string> files_found;
+
+    for (const Value& v : vlist) {
+        REQUIRE(v.get_type() == ValueType::STRING);
+        files_found.insert(v.get<std::string>());
+    }
+
+    REQUIRE(files_found.size() == 3);
+
+    REQUIRE(files_found.contains("a.cpp"));
+    REQUIRE(files_found.contains("b.cpp"));
+    REQUIRE(files_found.contains("c.cpp"));
 }
