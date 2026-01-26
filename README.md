@@ -14,7 +14,7 @@ An example configuration file, in full, may look as follows:
 
 src_dir = "src"
 
-cpp_files = files(src_dir)
+cpp_files = files(src_dir, ".cpp")
 cpp_names = file_names(cpp_files)
 
 <Clean> clean {

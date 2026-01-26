@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include "../errors/error.hpp"
@@ -38,16 +39,28 @@ Value BuiltIn::file_names(const std::vector<Value>& args) try {
 }
 
 Value BuiltIn::files(const std::vector<Value>& args) try {
-    if (args.size() != 1) {
-        throw ValueError("Invalid argument count. Only 1 argument permitted");
+    if (args.size() != 2) {
+        throw ValueError("Invalid argument count. 2 required: <path> <extensions>");
     }
 
-    const Value& arg = args.at(0);
-    if (arg.get_type() != ValueType::STRING) {
-        throw TypeError("Argument is not a string");
+    const Value& arg1 = args.at(0);
+    if (arg1.get_type() != ValueType::STRING) {
+        throw TypeError("Argument 1 is not a string");
     }
+    const std::string path = arg1.get<std::string>();
 
-    std::string path = arg.get<std::string>();
+    const Value& arg2 = args.at(1);
+    if (arg2.get_type() != ValueType::LIST) {
+        throw TypeError("Argument 1 is not a string");
+    }
+    const ValueList& ext_vlist = arg2.get<ValueList>();
+    std::unordered_set<std::string> extensions;
+    for (const Value& v : ext_vlist) {
+        if (v.get_type() != ValueType::STRING) {
+            throw TypeError("ValueList provided for argument 2 contains a non-string");
+        }
+        extensions.insert(v.get<std::string>());
+    }
 
     std::vector<std::unique_ptr<Value>> files;
     for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
@@ -55,8 +68,8 @@ Value BuiltIn::files(const std::vector<Value>& args) try {
             continue;
         }
 
-        auto filename = entry.path().filename();
-        if (filename.has_extension() && filename.extension() == ".cpp") {
+        const auto filename = entry.path().filename();
+        if (filename.has_extension() && extensions.contains(filename.extension())) {
             files.push_back(std::make_unique<Value>(filename));
         }
     }
