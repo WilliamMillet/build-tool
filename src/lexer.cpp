@@ -12,10 +12,10 @@ std::vector<Lexeme> Lexer::lex() try {
     loc = Location{.line_no = 1, .col_no = 1, .file_idx = 0};
 
     while (!at_end()) {
-        auto direct_itm = DIRECT_MAPPINGS.find(peek());
+        const auto direct_itm = DIRECT_MAPPINGS.find(peek());
         if (direct_itm != DIRECT_MAPPINGS.end()) {
-            Location lex_loc = loc;
-            std::string lex_val{consume()};
+            const Location lex_loc = loc;
+            const std::string lex_val{consume()};
             lexemes.push_back({direct_itm->second, lex_val, lex_loc});
             continue;
         }
@@ -41,7 +41,7 @@ std::vector<Lexeme> Lexer::lex() try {
                 break;
             }
             case SCOPE_RESOLVER: {
-                Location lex_loc = loc;
+                const Location lex_loc = loc;
                 consume(SCOPE_RESOLVER);
                 consume(SCOPE_RESOLVER);
                 lexemes.push_back({LexemeType::SCOPE_RESOLVER, "::", lex_loc});
@@ -56,7 +56,7 @@ std::vector<Lexeme> Lexer::lex() try {
                 break;
             }
             default: {
-                std::string unexpected = {peek()};
+                const std::string unexpected = {peek()};
                 throw SyntaxError("Unexpected char '" + unexpected + "'");
             }
         }
@@ -87,7 +87,7 @@ char Lexer::consume() {
 char Lexer::consume(char exp) {
     if (!at_end() && exp == peek()) return consume();
 
-    std::string exp_str{exp};
+    const std::string exp_str{exp};
     std::string actl_str;
     if (at_end()) {
         actl_str += "EOF";
@@ -106,7 +106,7 @@ void Lexer::consume_line() {
 }
 
 void Lexer::lex_string(std::vector<Lexeme>& lexemes) try {
-    Location opener_loc = loc;
+    const Location opener_loc = loc;
     consume(STRING_QUOTE);
     std::string str_val;
     while (!at_end() && peek() != STRING_QUOTE) {
@@ -122,7 +122,7 @@ void Lexer::lex_string(std::vector<Lexeme>& lexemes) try {
 }
 
 void Lexer::lex_rule_qualifier(std::vector<Lexeme>& lexemes) try {
-    Location opener_loc = loc;
+    const Location opener_loc = loc;
     consume(SINGLE_RULE_NAME_START);
     std::string id;
     while (!at_end() && peek() != SINGLE_RULE_NAME_END) {
@@ -143,7 +143,7 @@ void Lexer::lex_rule_qualifier(std::vector<Lexeme>& lexemes) try {
 }
 
 void Lexer::lex_identifier(std::vector<Lexeme>& lexemes) try {
-    Location start_loc = loc;
+    const Location start_loc = loc;
 
     std::string id;
     while (valid_identifier_char(peek())) {

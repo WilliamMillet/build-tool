@@ -77,7 +77,7 @@ class Dictionary {
     // after Value which is not possible due to the std::variant used
 
     /** Get a value from the dictionary */
-    Value& get(const std::string& key);
+    const Value& get(const std::string& key) const;
 
     /** Return true if the dictionary contains a type */
     bool contains(const std::string& key) const;
@@ -91,7 +91,7 @@ class Dictionary {
      * @note This method may be preferred over get + assert_type as it includes the field name in
      * exceptions
      */
-    void assert_contains(const std::vector<std::pair<std::string, ValueType>> shape);
+    void assert_contains(const std::vector<std::pair<std::string, ValueType>> shape) const;
 
    private:
     std::unordered_map<std::string, Value> fields;

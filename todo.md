@@ -2,8 +2,6 @@ HIGH PRIORITY
 - Have it so clean only works if the file dosent exist
 
 - String quote escaping
-- Look into better ways to throw exceptions without swallowing up stuff like exception type.
-- Possibly change Value to be more polymorphic and more open closed
 - Move all variables for classes to private for encapsulatory purposes
 - Add @exception to the function comments maybe
 - Possibly add an iterator to ValueLists
@@ -14,7 +12,6 @@ HIGH PRIORITY
 - Consider replacing the variant system I have with polymorphsim. This may be much more idiomatic
     - If I do this I can avoid a lot of the incomplete definition issues I faced earlier like not being able to define `vectorise`
 - Consider adding more templates to the Value file. E.g. something that allows you to get a type (like std::string) from an enum (like ValueType::STRING), vice versa or both.
-- As of the 16th my parser does not handle lists maybe? fix that
 - Add more safety checks to the program cause it feels like a house of cards at times
 - Implement an equivalent of make -j. Apparently topological sort is useful for this
 - Right now, MultiRule compiles everything, even if only one command needs running. Maybe fix this

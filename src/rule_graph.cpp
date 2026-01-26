@@ -11,7 +11,7 @@
 
 RuleGraph::RuleGraph(std::vector<std::unique_ptr<Rule>> rules) try {
     for (std::unique_ptr<Rule>& rule : rules) {
-        std::string name = rule->get_name();
+        const std::string name = rule->get_name();
         for (const std::string& dep : rule->get_deps()) {
             dep_map[name].push_back(dep);
         }

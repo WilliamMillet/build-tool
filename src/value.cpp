@@ -39,13 +39,13 @@ ValueList::const_iterator ValueList::end() const {
     return ValueList::const_iterator(elements.cend());
 };
 
-Value& Dictionary::get(const std::string& key) { return fields.at(key); }
+const Value& Dictionary::get(const std::string& key) const { return fields.at(key); }
 
 bool Dictionary::contains(const std::string& key) const { return fields.contains(key); }
 
 Value& Dictionary::insert(const std::string key, Value val) { return fields[key] = val; }
 
-void Dictionary::assert_contains(const std::vector<std::pair<std::string, ValueType>> shape) {
+void Dictionary::assert_contains(const std::vector<std::pair<std::string, ValueType>> shape) const {
     for (const auto& [field, field_type] : shape) {
         auto itm = fields.find(field);
         if (itm == fields.end()) {

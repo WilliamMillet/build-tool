@@ -26,7 +26,7 @@ Value BuiltIn::file_names(const std::vector<Value>& args) try {
         }
 
         std::string s = f.get<std::string>();
-        size_t last_dot = s.find_first_of('.');
+        const size_t last_dot = s.find_first_of('.');
         if (last_dot != std::string::npos) {
             s.erase(last_dot);
         }

@@ -15,7 +15,7 @@ std::unique_ptr<Rule> RuleFactory::make_rule(std::string name, Value obj, Locati
             return make_multi_rule(std::move(name), std::move(obj), std::move(loc));
         }
         default: {
-            std::string enum_str = std::to_string(static_cast<int>(cat));
+            const std::string enum_str = std::to_string(static_cast<int>(cat));
             throw ValueError("Invalid rule category (Enum ID: '" + enum_str + "')");
         }
     }
@@ -26,9 +26,10 @@ std::unique_ptr<Rule> RuleFactory::make_rule(std::string name, Value obj, Locati
 std::unique_ptr<CleanRule> RuleFactory::make_clean_rule(std::string name, Value obj,
                                                         Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
+    const Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::TARGETS, ValueType::LIST}});
-    auto deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::TARGETS).get<ValueList>());
+    const auto deps =
+        ValueUtils::vectorise<std::string>(dict.get(RuleFields::TARGETS).get<ValueList>());
     return std::make_unique<CleanRule>(name, deps, loc);
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "CleanRule factory method for '<CleanRule> " + name + "'", loc);
@@ -37,13 +38,15 @@ std::unique_ptr<CleanRule> RuleFactory::make_clean_rule(std::string name, Value 
 std::unique_ptr<MultiRule> RuleFactory::make_multi_rule(std::string name, Value obj,
                                                         Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
+    const Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains({{RuleFields::DEPS, ValueType::LIST},
                           {RuleFields::OUTPUT, ValueType::LIST},
                           {RuleFields::STEP, ValueType::ENUM}});
 
-    auto deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
-    auto out = ValueUtils::vectorise<std::string>(dict.get(RuleFields::OUTPUT).get<ValueList>());
+    const auto deps =
+        ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
+    const auto out =
+        ValueUtils::vectorise<std::string>(dict.get(RuleFields::OUTPUT).get<ValueList>());
 
     if (deps.size() != out.size()) {
         throw ValueError("Error in MultiRule '" + name + "'. 'deps' length (" +
@@ -51,7 +54,7 @@ std::unique_ptr<MultiRule> RuleFactory::make_multi_rule(std::string name, Value 
                          std::to_string(out.size()) + ").");
     }
 
-    auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
+    const auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 
     return std::make_unique<MultiRule>(name, deps, out, step, loc);
 } catch (std::exception& excep) {
@@ -61,14 +64,15 @@ std::unique_ptr<MultiRule> RuleFactory::make_multi_rule(std::string name, Value 
 std::unique_ptr<SingleRule> RuleFactory::make_single_rule(std::string name, Value obj,
                                                           Location loc) const try {
     obj.assert_type(ValueType::Dictionary);
-    Dictionary dict = obj.get<Dictionary>();
+    const Dictionary dict = obj.get<Dictionary>();
     dict.assert_contains(
         {{RuleFields::DEPS, ValueType::LIST}, {RuleFields::STEP, ValueType::ENUM}});
 
-    auto deps = ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
-    auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
+    const auto deps =
+        ValueUtils::vectorise<std::string>(dict.get(RuleFields::DEPS).get<ValueList>());
+    const auto step = resolve_enum<Step>(dict.get(RuleFields::STEP).get<ScopedEnumValue>());
 
-    return std::make_unique<SingleRule>(std::move(name), std::move(deps), step, loc);
+    return std::make_unique<SingleRule>(name, deps, step, loc);
 } catch (std::exception& excep) {
     Error::update_and_throw(excep, "SingleRule factory method for '<Rule> " + name + "'", loc);
 }

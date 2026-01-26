@@ -12,16 +12,16 @@ Parser::Parser(std::vector<Lexeme> _lexemes) : lexemes(_lexemes) {};
 std::vector<ParsedVariable> Parser::parse() try {
     std::vector<VarLexemes> var_lexes;
     while (!at_end()) {
-        Lexeme lex = peek();
+        const Lexeme lex = peek();
         if (match_type({LexemeType::IDENTIFIER})) {
-            Lexeme id_lex = consume(LexemeType::IDENTIFIER);
+            const Lexeme id_lex = consume(LexemeType::IDENTIFIER);
             consume(LexemeType::EQUALS);
             var_lexes.push_back(
                 {std::move(id_lex.value), consume_var_lexemes(), VarCategory::REGULAR, id_lex.loc});
         } else if (match_type({LexemeType::DICT_QUALIFIER})) {
-            Lexeme rule_lex = consume(LexemeType::DICT_QUALIFIER);
-            VarCategory cat = categorise_dictionary(rule_lex.value);
-            Lexeme id = consume(LexemeType::IDENTIFIER);
+            const Lexeme rule_lex = consume(LexemeType::DICT_QUALIFIER);
+            const VarCategory cat = categorise_dictionary(rule_lex.value);
+            const Lexeme id = consume(LexemeType::IDENTIFIER);
             var_lexes.push_back({std::move(id.value), consume_dict_lexemes(), cat, id.loc});
         } else {
             consume();
@@ -115,7 +115,7 @@ std::vector<Lexeme> Parser::consume_dict_lexemes() try {
 std::unique_ptr<Expr> Parser::parse_expr() try {
     std::unique_ptr<Expr> operand1 = parse_term();
     if (match_type(INFIX_OPERATORS)) {
-        Lexeme op = consume();
+        const Lexeme op = consume();
         switch (op.type) {
             case LexemeType::ADD: {
                 return std::make_unique<BinaryOpExpr>(BinaryOpType::ADD, std::move(operand1),
@@ -144,7 +144,7 @@ std::unique_ptr<Expr> Parser::parse_term() try {
             return parse_list();
         }
         case LexemeType::IDENTIFIER: {
-            std::string identifier = consume(LexemeType::IDENTIFIER).value;
+            const std::string identifier = consume(LexemeType::IDENTIFIER).value;
             if (at_end()) {
                 return std::make_unique<VarRefExpr>(identifier);
             }
@@ -155,7 +155,7 @@ std::unique_ptr<Expr> Parser::parse_term() try {
                 }
                 case LexemeType::SCOPE_RESOLVER: {
                     consume(LexemeType::SCOPE_RESOLVER);
-                    std::string enum_name = consume(LexemeType::IDENTIFIER).value;
+                    const std::string enum_name = consume(LexemeType::IDENTIFIER).value;
                     return std::make_unique<EnumExpr>(identifier, enum_name);
                 }
                 default: {
@@ -173,7 +173,7 @@ std::unique_ptr<Expr> Parser::parse_term() try {
 
 std::unique_ptr<FnExpr> Parser::parse_fn(std::string fn_name) try {
     std::unique_ptr<FnExpr> fn_expr = std::make_unique<FnExpr>(fn_name);
-    Lexeme opening_paren = consume(LexemeType::FN_START);
+    const Lexeme opening_paren = consume(LexemeType::FN_START);
 
     while (!at_end() && !match_type({LexemeType::FN_END})) {
         fn_expr->args.push_back(parse_expr());
@@ -193,7 +193,7 @@ std::unique_ptr<FnExpr> Parser::parse_fn(std::string fn_name) try {
 
 std::unique_ptr<ListExpr> Parser::parse_list() try {
     auto list = std::make_unique<ListExpr>();
-    Lexeme opening_paren = consume(LexemeType::LIST_START);
+    const Lexeme opening_paren = consume(LexemeType::LIST_START);
 
     while (!at_end() && !match_type({LexemeType::LIST_END})) {
         list->elements.push_back(parse_expr());
@@ -234,7 +234,7 @@ std::unique_ptr<DictionaryExpr> Parser::parse_dictionary() try {
     Error::update_and_throw(excep, "Parsing dictionary", get_loc());
 }
 
-VarCategory Parser::categorise_dictionary(std::string& id) {
+VarCategory Parser::categorise_dictionary(const std::string& id) {
     if (id == "Rule") {
         return VarCategory::SINGLE_RULE;
     } else if (id == "MultiRule") {

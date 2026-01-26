@@ -91,7 +91,7 @@ void VariableEvaluator::sort_by_eval_order(std::vector<ParsedVariable>& vars,
 
     std::vector<std::string> ordered;
     while (!q.empty()) {
-        std::string v = q.front();
+        const std::string v = q.front();
         q.pop_front();
 
         ordered.push_back(v);
@@ -128,7 +128,7 @@ void VariableEvaluator::process_val(const ParsedVariable& var, Value& val,
                 "Duplicate <Config> dictionaries detected. Only one configuration may be set",
                 var.loc);
         }
-        ConfigFactory fac;
+        const ConfigFactory fac;
         cfg = std::make_unique<Config>(fac.make_config(var.identifier, val));
     } else if (var.category != VarCategory::REGULAR) {
         RuleFactory fac;

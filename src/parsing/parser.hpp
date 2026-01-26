@@ -96,7 +96,7 @@ class Parser {
     std::unique_ptr<DictionaryExpr> parse_dictionary();
 
     /** Determine the category of a dictionary from it's qualifier id */
-    VarCategory categorise_dictionary(std::string& id);
+    VarCategory categorise_dictionary(const std::string& id);
 };
 
 #endif
