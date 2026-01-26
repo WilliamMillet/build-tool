@@ -110,5 +110,6 @@ std::vector<Command> CleanRule::get_commands(const Config&) const try {
     Error::update_and_throw(excep, "Building command for '<Clean> " + name + "'", loc);
 }
 
-/** There is no condition on cleaning */
-bool CleanRule::should_run(FSGateway&) const { return true; }
+bool CleanRule::should_run(FSGateway& fs) const {
+    return std::ranges::any_of(deps, [&](std::string d) { return fs.exists(d); });
+}
