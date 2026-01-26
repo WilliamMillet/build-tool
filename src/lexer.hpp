@@ -88,9 +88,6 @@ class Lexer {
     /** True iff there are no more characters to lex */
     bool at_end() const;
 
-    /** Determine if a character can be a valid component of an identifier */
-    static bool valid_identifier_char(char c);
-
     void lex_string(std::vector<Lexeme>& lexemes);
 
     void lex_rule_qualifier(std::vector<Lexeme>& lexemes);
@@ -98,6 +95,9 @@ class Lexer {
     void lex_identifier(std::vector<Lexeme>& lexemes);
 
     Lexeme make_lexeme(LexemeType type, std::string val = "") const;
+
+    /** Determine if a character can be a valid component of an identifier */
+    static bool valid_identifier_char(char c);
 };
 
 #endif

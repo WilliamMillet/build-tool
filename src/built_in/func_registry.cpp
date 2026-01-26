@@ -5,7 +5,7 @@
 #include "../errors/error.hpp"
 #include "../value.hpp"
 
-Value FuncRegistry::call(const std::string& name, const std::vector<Value>& args) try {
+Value FuncRegistry::call(const std::string& name, const std::vector<Value>& args) const try {
     if (!func_map.contains(name)) {
         throw ValueError("Cannot resolve function name '" + name + "'");
     }

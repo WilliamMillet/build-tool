@@ -17,7 +17,7 @@ class FuncRegistry {
    public:
     FuncRegistry(FnMap fn_map = DEFAULT_FN_MAP) : func_map(fn_map) {}
 
-    Value call(const std::string& name, const std::vector<Value>& args);
+    Value call(const std::string& name, const std::vector<Value>& args) const;
 
    private:
     FnMap func_map;
