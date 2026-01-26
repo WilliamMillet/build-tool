@@ -21,6 +21,8 @@ class ValueList {
 
     ValueList(std::vector<std::unique_ptr<Value>> elems);
 
+    size_t size() const;
+
     ValueList(const ValueList& other);
 
     ValueList& operator=(const ValueList& other);

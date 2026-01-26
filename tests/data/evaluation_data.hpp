@@ -1,3 +1,0 @@
-
-
-namespace ParsedData {}  // namespace ParsedData

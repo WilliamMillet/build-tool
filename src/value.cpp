@@ -6,6 +6,8 @@
 
 ValueList::ValueList(std::vector<std::unique_ptr<Value>> elems) : elements(std::move(elems)) {};
 
+size_t ValueList::size() const { return elements.size(); }
+
 ValueList::ValueList(const ValueList& other) {
     elements.reserve(other.elements.size());
     for (const Value& v : other) {

@@ -22,7 +22,8 @@ class FuncRegistry {
    private:
     FnMap func_map;
 
-    inline static const FnMap DEFAULT_FN_MAP = {{"file_names", BuiltIn::file_names}};
+    inline static const FnMap DEFAULT_FN_MAP = {{"file_names", BuiltIn::file_names},
+                                                {"files", BuiltIn::files}};
 };
 
 #endif

@@ -6,6 +6,10 @@
 namespace BuiltIn {
 /** Strips all file extensions off a list of file names */
 Value file_names(const std::vector<Value>& arg);
+
+/** Recursively extracts each file with a .cpp extension in the directory */
+Value files(const std::vector<Value>& args);
+
 }  // namespace BuiltIn
 
 #endif
