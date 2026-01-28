@@ -11,7 +11,11 @@ class ConfigFactory {
     inline const static std::string LINK_FLAGS_FIELD = "link_flags";
     inline const static std::string DEFAULT_FIELD = "default_rule";
 
-    /** Create a config based on a dictionary value object */
+    /**
+     * Create a configuration object using a parsed and evaluated value
+     * @param id The identifier the configuration is assigned to
+     * @param cfg_val The parsed and evaluated configuration dictionary with all required fields
+     */
     Config make_config(std::string id, Value cfg_val) const;
 };
 

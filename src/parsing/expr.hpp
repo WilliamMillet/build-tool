@@ -17,10 +17,21 @@ class Expr {
    public:
     virtual ~Expr() = default;
 
-    /** Singular interface for accessing node children (operands, arguments, etc) */
+    /**
+     * @brief Get the children object. This acts as a singular interface for accessing node children
+     *
+     * @return std::vector<Expr*> The list of all subexpressions (operands, expressions in
+     * containers, function arguments, etc)
+     */
     virtual std::vector<Expr*> get_children() const = 0;
 
-    /** Evaluate the expression tree as a value */
+    /**
+     * @brief Evaluate the expression tree as a value
+     *
+     * @param var_map The map of identifiers to variables
+     * @param fn_reg The callable function registry
+     * @return Value The evaluated value
+     */
     virtual Value evaluate(const VarMap& var_map, const FuncRegistry& fn_reg) const = 0;
 };
 

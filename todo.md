@@ -1,5 +1,4 @@
 # Short term ideas
-- String quote escaping
 - Move all variables for classes to private for encapsulatory purposes
 - Add @exception to the function comments maybe
 - Possibly add an iterator to ValueLists

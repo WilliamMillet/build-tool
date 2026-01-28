@@ -52,6 +52,7 @@ class Error : public std::exception {
      * Return a formatted error including the error type, an excerpt of the file where it occurred
      * and a trace of the events that occurred when thrown.
      * @param src_file The file the error occurred in (used to generate excerpt)
+     * @returns The formatted except
      */
     std::string format(const std::string& src_file) const;
 
@@ -59,9 +60,12 @@ class Error : public std::exception {
     std::string format() const;
 
     /**
-     * If e is an Error, context will be added and the location will be written if not set, then
-     * it will be rethrown
-     * If e is not an Error, it will be converted to one with ctx and loc
+     * Take either an Error or unknown exception, update it by adding a location if possible, then
+     * propagate it
+     * @param excep The original thrown exception. Either an Error, or unknown exception
+     * @param ctx Some context to add to the error (e.g. it occurred during this parsing step)
+     * @param loc Location data about the error for debugging
+     * @throws a propagated Error
      */
     [[noreturn]] static void update_and_throw(std::exception& excep, std::string ctx, Location loc);
 
@@ -85,6 +89,7 @@ class Error : public std::exception {
     /** Format the position in the file to "[line]:[col]" (no square brackets) */
     std::string format_file_pos() const;
 
+    /** Get the name of the error type (e.g. "UnknownError", "IOError") */
     virtual std::string err_name() const;
 };
 

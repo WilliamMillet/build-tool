@@ -13,6 +13,11 @@ class FSGateway {
 
     virtual std::filesystem::file_time_type last_write_time(std::string filename) const = 0;
 
+    /**
+     * Create a file
+     * @param filename The filename of the new file
+     * @throws If the file cannot be created successfully
+     */
     virtual void touch(std::string filename) = 0;
 };
 

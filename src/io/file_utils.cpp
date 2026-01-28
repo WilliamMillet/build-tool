@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "../errors/error.hpp"
+
 namespace fs = std::filesystem;
 
 std::vector<std::string> FileUtils::read_chunk(std::string path, size_t start_pos,
@@ -15,9 +17,9 @@ std::vector<std::string> FileUtils::read_chunk(std::string path, size_t start_po
     }
 
     if (start_pos >= fs::file_size(path)) {
-        throw std::invalid_argument("Cannot read from position " + std::to_string(start_pos) +
-                                    " (0 indexed) as file is only " +
-                                    std::to_string(fs::file_size(path)) + " bytes long");
+        throw IOError("Cannot read from position " + std::to_string(start_pos) +
+                      " (0 indexed) as file is only " + std::to_string(fs::file_size(path)) +
+                      " bytes long");
     }
 
     file.seekg(start_pos);
@@ -32,11 +34,11 @@ std::vector<std::string> FileUtils::read_chunk(std::string path, size_t start_po
 
 std::string FileUtils::read_all(std::string path) {
     if (!fs::exists(path)) {
-        throw std::invalid_argument("File '" + path + "' not found");
+        throw IOError("File '" + path + "' not found");
     }
     std::ifstream file(path);
     if (!file.is_open()) {
-        throw std::system_error(errno, std::generic_category(), "Failed to open '" + path + "'");
+        throw SystemError("Failed to open '" + path + "'");
     }
 
     std::string buf;

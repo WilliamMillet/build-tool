@@ -3,14 +3,12 @@
 
 static void throw_scope_err [[noreturn]] (ScopedEnumValue val) {
     const std::string enum_str = val.scope + "::" + val.name;
-    throw std::invalid_argument("Failed to parse enum '" + enum_str + "'. Unknown type '" +
-                                val.scope + "'");
+    throw ValueError("Failed to parse enum '" + enum_str + "'. Unknown type '" + val.scope + "'");
 }
 
 static void throw_name_err [[noreturn]] (ScopedEnumValue val) {
     const std::string enum_str = val.scope + "::" + val.name;
-    throw std::invalid_argument("Failed to parse enum '" + enum_str + ". No member '" + val.name +
-                                "' found");
+    throw ValueError("Failed to parse enum '" + enum_str + ". No member '" + val.name + "' found");
 }
 
 template <>

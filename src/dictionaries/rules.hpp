@@ -31,7 +31,11 @@ class Rule {
 
     virtual ~Rule() = default;
 
-    /** Get the executable commands associated with a rule*/
+    /**
+     * Get the executable commands associated with a rule
+     * @param cfg The config that should be considered when building the command
+     * @returns The vector of command tokens (e.g. {'clang++', 'app.cpp', '-o', 'app'})
+     */
     virtual std::vector<Command> get_commands(const Config& cfg) const = 0;
 
     /**
@@ -54,6 +58,7 @@ class Rule {
     /**
      * Returns true if and only if an immediate dependency's file output is newer then the 'name'
      * file
+     * @param fs The file system abstraction used for comparing dependencies
      */
     bool has_updated_dep(FSGateway& fs) const;
 };
