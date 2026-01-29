@@ -7,6 +7,6 @@
 
 <MultiRule> compilation {
     deps = cpp_files
-    output = cpp_names
+    output >= cpp_names
     step = Step::Compile
 }

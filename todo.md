@@ -1,7 +1,5 @@
 # Short term ideas
 - Move all variables for classes to private for encapsulatory purposes
-- Add @exception to the function comments maybe
-- Possibly add an iterator to ValueLists
 - Maybe implement a toString method for Value to simplify debugging
 - Implement an equivalent of make -j. Apparently topological sort is useful for this
 - Right now, MultiRule compiles everything, even if only one command needs running. Maybe fix this

@@ -1,10 +1,12 @@
 #include "error.hpp"
 
 #include <cstring>
+#include <format>
 
+#include "../io/colors.hpp"
 #include "../io/file_utils.hpp"
 
-size_t Location::line_start() const { return file_idx - col_no; }
+size_t Location::line_start() const { return file_idx - col_no + 1; }
 
 bool Location::is_eof() const {
     return (line_no == END_OF_FILE) && (col_no == END_OF_FILE) && (file_idx == END_OF_FILE);
@@ -27,11 +29,12 @@ void Error::add_ctx(std::string ctx) { ctx_stack.push_back(ctx); };
 bool Error::has_loc() const { return loc.has_value(); };
 
 std::string Error::format(const std::string& src_file) const {
-    std::string err = "Error raised: " + err_name();
+    std::string err = std::format("Error raised: {}{}{}", Colors::RED, err_name(), Colors::RESET);
     err += "\nMessage: " + msg;
 
     if (loc.has_value()) {
-        err += "\nLocation: " + src_file + ":" + format_file_pos() + ":\n";
+        err += std::format("\nLocation: {}{}:{}{}:\n", Colors::GREEN, src_file, format_file_pos(),
+                           Colors::RESET);
         err += format_excerpt(src_file);
     }
 
@@ -71,7 +74,7 @@ std::string Error::format_excerpt(const std::string& src_file) const {
     size_t relative_lno = 1;
     for (const std::string& line : chunk) {
         if (relative_lno == 1) {
-            formatted += initial_lno;
+            formatted += std::format("{}{}{}", Colors::BLUE, initial_lno, Colors::RESET);
         } else {
             formatted += whitespace_prefix;
         }
@@ -88,7 +91,7 @@ std::string Error::format_excerpt(const std::string& src_file) const {
         formatted += " |";
         if (relative_lno == 1) {
             formatted += std::string(loc->col_no, ' ');
-            formatted += "^ error here";
+            formatted += std::format("{}^ error here{}", Colors::RED, Colors::RESET);
         }
 
         formatted += "\n";
@@ -104,7 +107,7 @@ std::string Error::format_ctx() const {
         ctx += "Context: Error occurred during:";
     }
     for (const std::string& c : ctx_stack) {
-        ctx += "\n- [" + c + "]";
+        ctx += std::format("\n- [{}{}{}]", Colors::BLUE, c, Colors::RESET);
     }
     return ctx;
 }

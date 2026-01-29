@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 
 #include <cctype>
+#include <iostream>
 
 #include "errors/error.hpp"
 #include "io/file_utils.hpp"
@@ -57,6 +58,7 @@ std::vector<Lexeme> Lexer::lex() try {
             }
             default: {
                 const std::string unexpected = {peek()};
+
                 throw SyntaxError("Unexpected char '" + unexpected + "'");
             }
         }

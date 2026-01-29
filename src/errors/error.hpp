@@ -9,10 +9,11 @@
 #include <vector>
 
 struct Location {
-    constexpr static size_t END_OF_FILE = std::numeric_limits<size_t>::max();
     size_t line_no;
     size_t col_no;
     size_t file_idx;
+
+    constexpr static size_t END_OF_FILE = std::numeric_limits<size_t>::max();
 
     size_t line_start() const;
 
