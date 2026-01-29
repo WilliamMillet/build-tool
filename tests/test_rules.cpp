@@ -191,16 +191,18 @@ TEST_CASE("Multi rule should_run returns true when any dependency is newer", "[r
     REQUIRE(rule.should_run(fs) == true);
 }
 
-TEST_CASE("Clean rule should_run always returns true", "[rule_runner]") {
+TEST_CASE("Clean rule should_run return true only if any files exist", "[rule_runner]") {
     std::vector<std::string> targets = {"app", "file1.o", "file2.o"};
     CleanRule rule{"clean", targets, Location{0, 0, 0}};
     MockFsGateway fs;
 
-    // Clean rule should always run regardless of file state
+    // Clean rule should always run regardless
+    REQUIRE(rule.should_run(fs) == false);
+
+    fs.touch("app");
+
     REQUIRE(rule.should_run(fs) == true);
 
-    // Even when targets exist
-    fs.touch("app");
     fs.touch("file1.o");
     fs.touch("file2.o");
 

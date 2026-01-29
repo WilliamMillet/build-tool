@@ -127,6 +127,9 @@ TEST_CASE("Test clean rule", "[rule_runner]") {
     auto cfg = std::make_shared<Config>(Config{"cfg", "clang++", {"-Werror", "-Wall"}, {}, "test"});
 
     auto fs = std::make_shared<MockFsGateway>();
+    fs->touch("a.o");
+    fs->touch("b.o");
+    fs->touch("prog.o");
 
     const Rule& clean_rule = graph->get_rule("clean");
     REQUIRE(clean_rule.should_run(*fs) == true);

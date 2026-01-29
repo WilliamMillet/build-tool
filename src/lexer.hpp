@@ -35,6 +35,11 @@ struct Lexeme {
 
 class Lexer {
    public:
+    /**
+     * @brief Construct a new Lexer object
+     *
+     * @param input The file to extract lexemes from
+     */
     Lexer(const std::string input = DEFAULT_SRC_FILE_NAME);
 
     /** Convert a file to lexemes */
@@ -79,13 +84,19 @@ class Lexer {
     /** Return the next character in the src and advance the position */
     char consume();
 
-    /** Consume if the char to consume is exp, otherwise throw an exception */
+    /**
+     * @brief Consume a specific value.
+     *
+     * @param exp The expected character
+     * @return the consumed character
+     * @throws if the character is not of the expected type or there are no more characters
+     */
     char consume(char exp);
 
     /** Advance the character until a newline is reached. The newline is not consumed */
     void consume_line();
 
-    /** True iff there are no more characters to lex */
+    /** True if and only if there are no more characters to lex */
     bool at_end() const;
 
     void lex_string(std::vector<Lexeme>& lexemes);

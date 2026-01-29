@@ -16,7 +16,11 @@ class RuleRunner {
     RuleRunner(std::shared_ptr<const RuleGraph> rule_graph, std::shared_ptr<const Config> cfg,
                std::shared_ptr<ProcessSpawner> proc_spawner, std::shared_ptr<FSGateway> fs_gw);
 
-    /** Run a specified user rule */
+    /**
+     * @brief Run a rule and all of it's dependencies
+     *
+     * @param rule_name The rule's identifier
+     */
     void run_rule(const std::string& rule_name) const;
 
    private:

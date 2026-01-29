@@ -18,12 +18,19 @@ using VarMap = std::unordered_map<std::string, Value>;
 class VariableEvaluator {
    public:
     /**
-     * Create an identifier registry by evaluating variables in the topological order
+     * @brief Create an identifier registry
+     *
      * @param vars The parsed, but not evaluated variables
-     * @param fn_reg The registry of functions used in evaluating variables
+     * @param _fn_reg The registry of functions used in evaluating variables
      */
     VariableEvaluator(std::vector<ParsedVariable> vars, FuncRegistry _fn_reg);
 
+    /**
+     * @brief Evaluating variables in the topological order
+     *
+     * @return QualifiedDicts the qualified dictionaries extracted from the evaluated variables
+     * @throws If no config could be found
+     */
     QualifiedDicts evaluate();
 
    private:

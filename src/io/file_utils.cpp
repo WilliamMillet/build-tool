@@ -2,7 +2,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <stdexcept>
 #include <vector>
 
 #include "../errors/error.hpp"

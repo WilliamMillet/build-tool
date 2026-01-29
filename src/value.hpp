@@ -106,21 +106,39 @@ class Value {
     Value(ScopedEnumValue x);
     Value(Dictionary x);
 
+    /**
+     * @brief Get the underlying data from the Value
+     *
+     * @tparam T The expected rule type
+     * @return const T& the underlying data
+     */
     template <typename T>
     const T& get() const {
         return std::get<T>(raw_val);
     }
 
+    /**
+     * @brief Get an enum representing the value type
+     *
+     * @return ValueType
+     */
     ValueType get_type() const;
 
-    /** Throw an exception if this value is not of an expected type */
+    /**
+     * @brief Throw an exception if this value is not of an expected type
+     *
+     * @param exp The expected type
+     * @throws If the type is unexpected
+     */
     void assert_type(ValueType exp) const;
 
     Value& operator+=(const Value& other);
 
     /**
-     * Throw an exception if a type does not match it's expected type
+     * @brief Throw an exception if a type does not match it's expected type
+
      * @param exp A vector of pairs from values to the expected types
+     * @throws If a field is not found or it's value is not the expected type
      */
     static void assert_types(const ValTypePair exp);
 
